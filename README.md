@@ -2,110 +2,174 @@
 
 🧠 **Intelligence-First Memory and Context Protocol Server**
 
-A sophisticated MCP (Model Context Protocol) server that transforms AI interactions with intelligent memory, project insights, and pattern recognition.
+A sophisticated MCP (Model Context Protocol) server that transforms AI interactions with intelligent memory, project insights, and pattern recognition. MiniMe-MCP creates a persistent digital memory that enables AI assistants to remember context across sessions, learn from your codebase, and provide increasingly intelligent assistance over time.
 
-## 🚀 Quick Start
+## ✨ Why MiniMe-MCP?
+
+- **Persistent Context**: Your AI assistant remembers everything - decisions, code patterns, project knowledge
+- **Intelligent Analysis**: AI-powered insights that identify patterns and learning opportunities
+- **Universal IDE Support**: Works seamlessly with VS Code, Claude Desktop, Cursor, Windsurf
+- **Privacy-First**: Runs locally with your own Ollama models - your data never leaves your machine
+- **Multi-Architecture**: Native support for both Intel/AMD (x64) and Apple Silicon (ARM64)
+
+## 🚀 Quick Start (5 minutes)
+
+### Prerequisites
+
+1. **Install Docker** - [Get Docker](https://docs.docker.com/get-docker/)
+2. **Install Ollama** - Required for AI models
+   ```bash
+   # macOS
+   brew install ollama
+   
+   # Linux
+   curl -fsSL https://ollama.ai/install.sh | sh
+   
+   # Windows
+   # Download from https://ollama.ai/download
+   ```
+
+3. **Pull Required Models**
+   ```bash
+   # Pull the embedding model (REQUIRED)
+   ollama pull mxbai-embed-large
+   
+   # Pull the default LLM model
+   ollama pull deepseek-coder:6.7b
+   ```
+
+### Run MiniMe-MCP
 
 ```bash
-# Clone and start
-git clone <repository-url>
-cd MiniMe-MCP
-make all
+# Pull and run the Docker image (auto-selects ARM64 or AMD64)
+docker run -d \
+  --name minimemcp \
+  -p 5432:5432 \
+  -p 8000:8000 \
+  -p 9000:9000 \
+  -v minime-mcp-v9:/data \
+  -e POSTGRES_PASSWORD=minime_password \
+  manujbawa/minimemcp:latest
 ```
 
-**Access Points:**
-- 📍 **MCP Server**: http://localhost:8000  
-- 📍 **UI Interface**: http://localhost:9000  
-- 🏥 **Health Check**: http://localhost:8000/health  
+**That's it!** MiniMe-MCP is now running:
+- 📍 **MCP API**: http://localhost:8000
+- 📍 **Web UI**: http://localhost:9000
+- 🏥 **Health Check**: http://localhost:8000/health
 
-## ✨ Key Features
+## 🛠️ MCP Tools for Your IDE
 
-### 🧠 Intelligence-First Framework
-- **Mandatory Session Startup**: Automatic project context loading
-- **Aggressive Memory Storage**: Everything stored automatically
-- **Pattern Recognition**: AI-powered insights and learning
-- **Universal IDE Support**: VS Code, Claude Desktop, Cursor, Windsurf
+### Install the MCP Client
+```bash
+npm install -g @minimemcp/mcp-client
+```
 
-### 🛠️ MCP Tools
+### Available MCP Tools
 - `store_memory` - Intelligent memory storage with auto-tagging
 - `search_memories` - Hybrid semantic/keyword search
-- `get_insights` - AI-powered pattern analysis  
+- `get_insights` - AI-powered pattern analysis
 - `start_thinking` - Structured reasoning sequences
 - `manage_tasks` - Project task management
 - `manage_project` - Documentation and project management
 
-### 🚀 Technology Stack
-- **Database**: PostgreSQL with pgvector for embeddings
-- **AI Models**: Local Ollama (mxbai-embed-large, qwen3:8b)
-- **Frontend**: React with Material-UI
-- **Backend**: Node.js with Express
-- **Container**: Single Docker container for easy deployment
+## 🎯 IDE Integration
 
-## 📋 Project Structure
+Configure your IDE to use MiniMe-MCP tools:
 
+- **[Claude Desktop](install/mcp-config/claude-code/README.md)** - Full MCP support
+- **[Cursor](install/mcp-config/cursor/README.md)** - Full MCP support
+- **[VS Code](install/mcp-config/vscode/README.md)** - Awaiting MCP extension
+- **[Windsurf](install/mcp-config/windsurf/README.md)** - Full MCP support
+
+Once configured, your AI assistant will have access to persistent memory and intelligent tools directly in your IDE.
+
+## 🧠 Key Features
+
+### Intelligence-First Framework
+- **Mandatory Session Startup**: Automatic project context loading
+- **Aggressive Memory Storage**: Everything important is stored automatically
+- **Pattern Recognition**: AI identifies trends and learning opportunities
+- **Structured Thinking**: Multi-step reasoning for complex problems
+
+### Advanced Capabilities
+- **Unified Insights v2**: Pattern detection with LLM-powered categorization
+- **Sequential Thinking**: Branch and explore multiple solution paths
+- **Project Intelligence**: Learns your codebase structure and conventions
+- **Task Management**: Integrated task tracking with intelligent prioritization
+
+## 🔧 Advanced Configuration
+
+### Use Different LLM Models
+```bash
+docker run -d \
+  --name minimemcp \
+  -e LLM_MODEL="llama2:13b" \
+  -e POSTGRES_PASSWORD=minime_password \
+  -p 5432:5432 -p 8000:8000 -p 9000:9000 \
+  -v minime-mcp-v9:/data \
+  manujbawa/minimemcp:latest
 ```
-MiniMe-MCP/
-├── build/           # Docker build files and scripts
-├── src/            # Main server source code
-├── ui/             # React frontend application  
-├── mcp-client/     # NPM package for MCP client
-├── install/        # IDE configuration files
-├── .claude/        # Claude Desktop settings
-├── .vscode/        # VS Code configuration
-└── Makefile        # Root delegator to build/Makefile
+
+### Custom Ports
+```bash
+docker run -d \
+  --name minimemcp \
+  -e MCP_PORT="8080" \
+  -e UI_PORT="3000" \
+  -e POSTGRES_PASSWORD=minime_password \
+  -p 5432:5432 -p 8080:8080 -p 3000:3000 \
+  -v minime-mcp-v9:/data \
+  manujbawa/minimemcp:latest
 ```
 
-## 🔧 Development
+## 📦 Building from Source
+
+For development or customization:
 
 ```bash
+# Clone the repository
+git clone https://github.com/yourusername/MiniMe-MCP
+cd MiniMe-MCP
+
+# Quick start with everything
+make all
+
 # Development mode with hot reload
 make dev-hot
 
-# Debug mode with extensive logging  
-make debug
-
-# Run tests
-make test
-
-# Check system health
-make health
-```
-
-## 📦 Builds
-
-```bash
-# Fast build (requires base image)
+# Build for production
 make build-fast-v2
-
-# Full build with base image
-make build-base && make build-fast-v2
-
-# Clean build
-make clean && make build-fast-v2
 ```
 
-## 🎯 IDE Integration
+## 🐛 Troubleshooting
 
-Pre-configured for multiple IDEs:
-- **Claude Desktop**: `install/mcp-config/claude-code/`
-- **VS Code**: `install/mcp-config/vscode/`  
-- **Cursor**: `install/mcp-config/cursor/`
+### Check Status
+```bash
+# Container status
+docker ps -f name=minimemcp
 
-See `install/INSTALL.md` for setup instructions.
+# View logs
+docker logs minimemcp -f
+
+# Test health
+curl http://localhost:8000/health
+```
+
+### Common Issues
+
+**Ollama Connection**
+- Ensure Ollama is running: `ollama serve`
+- Verify models are downloaded: `ollama list`
+
+**Memory Processing**
+- Check embedding model: `ollama pull mxbai-embed-large`
+- View logs: `docker logs minimemcp | grep embed`
 
 ## 📚 Documentation
 
-- **Installation**: `install/INSTALL.md`
-- **MCP Configuration**: `install/mcp-config/README.md`
-- **API Documentation**: Available at `/api/docs` when running
-
-## 🧪 Testing Fresh Installation
-
-The system includes comprehensive test endpoints and health checks. See build logs for verification of:
-- Database initialization
-- AI model loading  
-- MCP tool availability
-- UI functionality
+- **[Installation Guide](install/INSTALL.md)** - Detailed setup instructions
+- **[MCP Configuration](install/mcp-config/README.md)** - IDE integration guides
+- **[API Documentation](http://localhost:8000/api/docs)** - Available when running
 
 ## 🤝 Contributing
 
@@ -122,3 +186,10 @@ This project is licensed under the MIT License - see the LICENSE file for detail
 ---
 
 **Built with Intelligence-First principles for maximum AI productivity** 🚀
+
+### Technology Stack
+- **Database**: PostgreSQL with pgvector for embeddings
+- **AI Models**: Local Ollama (mxbai-embed-large, deepseek-coder:6.7b)
+- **Frontend**: React with Material-UI
+- **Backend**: Node.js with Express
+- **Container**: Single Docker container with multi-arch support (AMD64 + ARM64)
