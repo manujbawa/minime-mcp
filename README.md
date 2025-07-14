@@ -210,7 +210,7 @@ Configure your IDE to use MiniMe-MCP tools:
 
 - **[Claude Desktop](install/mcp-config/claude-code/README.md)** - Full MCP support
 - **[Cursor](install/mcp-config/cursor/README.md)** - Full MCP support
-- **[VS Code](install/mcp-config/vscode/README.md)** - Awaiting MCP extension
+- **[VS Code](install/mcp-config/vscode/README.md)** - Supported with Copilot
 - **[Windsurf](install/mcp-config/windsurf/README.md)** - Full MCP support
 
 Once configured, your AI assistant will have access to persistent memory and intelligent tools directly in your IDE.
