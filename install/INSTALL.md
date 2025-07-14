@@ -55,22 +55,24 @@ MINIME_SERVER_URL=http://localhost:8000 minime-mcp
 
 ## 3. Run the MiniMe-MCP Server (Docker)
 
-Start the MiniMe-MCP server with Docker. This command will automatically create a persistent volume for your data:
+Start the MiniMe-MCP server with Docker. The image is available on Docker Hub with support for both AMD64 and ARM64 architectures:
 
 ```bash
 docker run -d \
-  --name minime-mcp \
+  --name minimemcp \
   -p 5432:5432 \
   -p 8000:8000 \
   -p 9000:9000 \
-  -v minime_data:/var/lib/postgresql/data \
-  minimemcp:latest-v2
+  -v minime-mcp-v9:/data \
+  -e POSTGRES_PASSWORD=minime_password \
+  manujbawa/minimemcp:latest
 ```
 
 **What this does:**
 - Runs MiniMe-MCP in the background as a Docker container
+- Automatically selects the correct architecture (AMD64 for Intel/AMD, ARM64 for Apple Silicon)
 - Exposes ports: 5432 (PostgreSQL), 8000 (MCP API), 9000 (Web UI)
-- Creates a persistent Docker volume `minime_data` for your database
+- Creates a persistent Docker volume `minime-mcp-v9` for your data
 - Uses the default LLM (`deepseek-coder:6.7b`) and embedding model (`mxbai-embed-large`)
 - Connects to Ollama running on your host at `http://host.docker.internal:11434`
 
@@ -95,64 +97,69 @@ You can customize MiniMe-MCP by setting environment variables in your Docker com
 ### Override LLM Model
 ```bash
 docker run -d \
-  --name minime-mcp \
+  --name minimemcp \
   -e LLM_MODEL="llama2:13b" \
+  -e POSTGRES_PASSWORD=minime_password \
   -p 5432:5432 \
   -p 8000:8000 \
   -p 9000:9000 \
-  -v minime_data:/var/lib/postgresql/data \
-  minimemcp:latest-v2
+  -v minime-mcp-v9:/data \
+  manujbawa/minimemcp:latest
 ```
 
 ### Set Maximum Tokens
 ```bash
 docker run -d \
-  --name minime-mcp \
+  --name minimemcp \
   -e LLM_MAX_TOKENS="8000" \
+  -e POSTGRES_PASSWORD=minime_password \
   -p 5432:5432 \
   -p 8000:8000 \
   -p 9000:9000 \
-  -v minime_data:/var/lib/postgresql/data \
-  minimemcp:latest-v2
+  -v minime-mcp-v9:/data \
+  manujbawa/minimemcp:latest
 ```
 
 ### Change Ports
 ```bash
 docker run -d \
-  --name minime-mcp \
+  --name minimemcp \
   -e MCP_PORT="8080" \
   -e UI_PORT="3000" \
+  -e POSTGRES_PASSWORD=minime_password \
   -p 5432:5432 \
   -p 8080:8080 \
   -p 3000:3000 \
-  -v minime_data:/var/lib/postgresql/data \
-  minimemcp:latest-v2
+  -v minime-mcp-v9:/data \
+  manujbawa/minimemcp:latest
 ```
 
 ### Use Custom Volume
 ```bash
 docker run -d \
-  --name minime-mcp \
+  --name minimemcp \
+  -e POSTGRES_PASSWORD=minime_password \
   -p 5432:5432 \
   -p 8000:8000 \
   -p 9000:9000 \
-  -v my_custom_volume:/var/lib/postgresql/data \
-  minimemcp:latest-v2
+  -v my_custom_volume:/data \
+  manujbawa/minimemcp:latest
 ```
 
 ### Combined Example
 ```bash
 docker run -d \
-  --name minime-mcp \
+  --name minimemcp \
   -e LLM_MODEL="llama2:13b" \
   -e LLM_MAX_TOKENS="8000" \
   -e MCP_PORT="8080" \
   -e UI_PORT="3000" \
+  -e POSTGRES_PASSWORD=minime_password \
   -p 5432:5432 \
   -p 8080:8080 \
   -p 3000:3000 \
-  -v my_minime_data:/var/lib/postgresql/data \
-  minimemcp:latest-v2
+  -v my_minime_data:/data \
+  manujbawa/minimemcp:latest
 ```
 
 ---
@@ -162,7 +169,7 @@ docker run -d \
 ### Container can't connect to Ollama
 - Ensure Ollama is running: `ollama serve`
 - Check that both models are downloaded: `ollama list`
-- Verify the container can reach the host: `docker exec minime-mcp ping host.docker.internal`
+- Verify the container can reach the host: `docker exec minimemcp ping host.docker.internal`
 
 ### MCP Client not found
 ```bash
@@ -176,7 +183,7 @@ npm install -g @minimemcp/mcp-client
 
 ### Memory processing errors
 - Ensure the embedding model is installed: `ollama pull mxbai-embed-large`
-- Check container logs: `docker logs minime-mcp | grep embed`
+- Check container logs: `docker logs minimemcp | grep embed`
 
 ### Connection issues
 ```bash
@@ -190,13 +197,13 @@ MINIME_SERVER_URL=http://localhost:8000 MINIME_DEBUG=true minime-mcp
 ### General debugging
 ```bash
 # Check container status
-docker ps -f name=minime-mcp
+docker ps -f name=minimemcp
 
 # View container logs
-docker logs minime-mcp -f
+docker logs minimemcp -f
 
 # Restart container
-docker restart minime-mcp
+docker restart minimemcp
 ```
 
 For more help, check the container logs and ensure all prerequisites (Ollama, npm client, Docker) are properly installed and running.
