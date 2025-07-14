@@ -384,20 +384,23 @@ function registerHandlers(mcpServer, services) {
   });
 
   // Enhanced notification handlers
-  mcpServer.setNotificationHandler('notifications/roots/list_changed', async () => {
-    logger.info('[MCP] Received roots list changed notification - updating project intelligence');
-    // Trigger re-analysis of project context when roots change
-    if (services.mcpTools) {
-      setTimeout(() => {
-        services.mcpTools.callTool('store_memory', {
-          content: 'Project roots changed - may need to re-analyze project structure and update intelligence context',
-          memory_type: 'general',
-          importance_score: 6,
-          tags: ['roots_changed', 'project_update', 'intelligence']
-        }).catch(() => {});
-      }, 100);
-    }
-  });
+  // TODO: Fix notification handler - currently causing errors in production
+  // The setNotificationHandler expects a schema object, not a string
+  // This feature is not part of the official MCP spec
+  // mcpServer.setNotificationHandler('notifications/roots/list_changed', async () => {
+  //   logger.info('[MCP] Received roots list changed notification - updating project intelligence');
+  //   // Trigger re-analysis of project context when roots change
+  //   if (services.mcpTools) {
+  //     setTimeout(() => {
+  //       services.mcpTools.callTool('store_memory', {
+  //         content: 'Project roots changed - may need to re-analyze project structure and update intelligence context',
+  //         memory_type: 'general',
+  //         importance_score: 6,
+  //         tags: ['roots_changed', 'project_update', 'intelligence']
+  //       }).catch(() => {});
+  //     }, 100);
+  //   }
+  // });
 }
 
 // Helper functions for intelligence framework
