@@ -1,0 +1,11 @@
+{
+  "mcpServers": {
+    "minime": {
+      "command": "minime-mcp",
+      "env": {
+        "MINIME_SERVER_URL": "http://localhost:8000",
+        "MINIME_DEBUG": "false"
+      }
+    }
+  }
+}

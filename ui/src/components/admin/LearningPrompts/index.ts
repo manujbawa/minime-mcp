@@ -1,0 +1,1 @@
+export { LearningPromptsTab } from './LearningPromptsTab';

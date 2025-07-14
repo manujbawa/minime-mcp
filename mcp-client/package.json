@@ -1,0 +1,42 @@
+{
+  "name": "@minimemcp/mcp-client",
+  "version": "1.0.1",
+  "description": "MCP client for connecting Cursor/VS Code to MiniMe AI Memory Server",
+  "author": "MiniMe Team",
+  "license": "MIT",
+  "type": "module",
+  "bin": {
+    "minime-mcp": "./bin/minime-mcp"
+  },
+  "main": "src/index.js",
+  "files": [
+    "bin/",
+    "src/",
+    "README.md"
+  ],
+  "scripts": {
+    "test": "node src/index.js"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.13.0",
+    "node-fetch": "^3.3.2"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "keywords": [
+    "mcp",
+    "cursor",
+    "ai",
+    "memory",
+    "minime",
+    "model-context-protocol"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/minimemcp/minime-mcp.git"
+  },
+  "publishConfig": {
+    "access": "public"
+  }
+}

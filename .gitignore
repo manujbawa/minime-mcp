@@ -1,0 +1,77 @@
+# Dependencies
+node_modules/
+
+# Data and exports
+data/
+exports/
+
+*.db
+# Exclude .sql files everywhere except build folder
+*.sql
+!build/
+!build/*.sql
+!build/**/*.sql
+
+# Logs
+*.log
+npm-debug.log*
+/var/log/
+
+# Environment files
+.env
+.env.local
+.env.*.local
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+.DS_Store
+
+# Build artifacts
+dist/
+build/
+local_build_scripts/
+
+# Vendored dependencies (large binaries)
+build/vendor/
+build/local-ollama-models/
+
+# Memory files
+# Ignore all files and folders starting with a dot
+.*
+
+# But keep these important ones
+!.gitignore
+!.gitattributes
+!.github/
+!.github/**
+!.nvmrc
+!.node-version
+#- ESLint configuration
+!.eslintrc.*
+# - Prettier configuration
+!.prettierrc 
+#dont ignore dockerIgnore
+!.dockerignore
+
+# Memory bank documentation
+memory-bank/
+mcp-client/PUBLISH.md
+ui-design.md
+vulnerability-analysis-and-fixes.md
+PRD.md
+post-security-scan-results.md
+ORGANIZATION.md
+LOCAL_MODELS.md
+high-vulnerability-analysis.md
+DOCKER.md
+
+# Review folder to be deleted
+review-to-be-deleted/
+# Large dump files
+dump-minime_memories*.sql
+# Backup files
+backups/*.dump
+backups/*.sql
