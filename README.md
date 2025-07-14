@@ -1,8 +1,6 @@
 # MiniMe-MCP v0.1.7-v2
 
-# 🚀 **The Era of Context Engineering/Vibe Coding is Here**
-
-## **Stop Fighting Your AI. Start Building Together.**
+# 🚀 **The IDE Agent upgrade that creates your developer digital twin—across all your projects.**
 
 Everyone's doing it now—**vibe coding** with AI assistants. That magical flow where you're thinking out loud, the AI gets it, and code just happens. But here's the problem: your AI has amnesia. Every conversation starts from zero. Every project feels like explaining yourself to a stranger.
 
