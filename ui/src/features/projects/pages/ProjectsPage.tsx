@@ -10,7 +10,7 @@ import { useNavigate } from 'react-router-dom';
 import { PageLayout } from '../../../components/layout/PageLayout';
 import { ProjectsAPI } from '../../../services/api';
 import { useApp } from '../../../contexts/AppContext';
-import { useWebSocket } from '../../../contexts/WebSocketContext';
+import { useRefresh } from '../../../contexts/RefreshContext';
 import {
   ProjectsSearch,
   ProjectsGrid,
@@ -21,7 +21,7 @@ import type { Project } from '../../../types';
 export const ProjectsPage: React.FC = () => {
   const navigate = useNavigate();
   const { addNotification, setCurrentProject } = useApp();
-  const { subscribe } = useWebSocket();
+  const { refreshKey } = useRefresh();
   
   // State
   const [loading, setLoading] = useState(true);
@@ -55,14 +55,7 @@ export const ProjectsPage: React.FC = () => {
 
   useEffect(() => {
     fetchProjects();
-
-    // Subscribe to project updates
-    const unsubscribe = subscribe('project:created', () => {
-      fetchProjects();
-    });
-
-    return unsubscribe;
-  }, []);
+  }, [refreshKey]); // Refresh when refreshKey changes
 
   // Handlers
   const handleCreateProject = async () => {

@@ -2,7 +2,7 @@ import React, { Suspense, lazy } from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { CircularProgress, Box } from '@mui/material';
 import { AppProvider } from './contexts/AppContext';
-import { WebSocketProvider } from './contexts/WebSocketContext';
+import { RefreshProvider } from './contexts/RefreshContext';
 import { MainLayout } from './layouts/MainLayout';
 import { basename } from './config/environment';
 
@@ -39,7 +39,7 @@ function App() {
   return (
     <BrowserRouter basename={basename}>
       <AppProvider>
-        <WebSocketProvider>
+        <RefreshProvider>
           <Routes>
             <Route path="/" element={<MainLayout />}>
               <Route
@@ -149,7 +149,7 @@ function App() {
               <Route path="*" element={<Navigate to="/" replace />} />
             </Route>
           </Routes>
-        </WebSocketProvider>
+        </RefreshProvider>
       </AppProvider>
     </BrowserRouter>
   );

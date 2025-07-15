@@ -1,6 +1,6 @@
 -- MiniMe-MCP Fresh Installation Database Script
 -- This script creates a clean database with all necessary structures and configuration data
--- Version: 0.1.7-v2
+-- Version: 0.2.0
 -- Generated: 2025-01-05
 
 -- =====================================================

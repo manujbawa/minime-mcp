@@ -40,7 +40,15 @@ app.use((req, res, next) => {
 const distPath = path.join(__dirname, 'dist');
 log.info(`Serving static files from: ${distPath}`);
 
-app.use('/ui', express.static(distPath));
+// Configure static file serving with no-cache headers for development
+app.use('/ui', express.static(distPath, {
+  setHeaders: (res) => {
+    // Prevent caching issues in development/Docker environments
+    res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
+    res.setHeader('Pragma', 'no-cache');
+    res.setHeader('Expires', '0');
+  }
+}));
 
 // Parse JSON bodies for API proxy
 app.use(express.json());
@@ -101,79 +109,7 @@ app.use('/mcp', async (req, res) => {
   }
 });
 
-// SSE proxy endpoint - special handling for Server-Sent Events
-app.get('/api/sse/events', async (req, res) => {
-  const targetUrl = `${MCP_SERVER_URL}/api/sse/events`;
-  log.info(`Proxying SSE connection: ${req.originalUrl} -> ${targetUrl}`);
-  
-  try {
-    // Use http module for proper streaming support
-    const http = await import('http');
-    const url = new URL(targetUrl);
-    
-    const options = {
-      hostname: url.hostname,
-      port: url.port || 80,
-      path: url.pathname + url.search,
-      method: 'GET',
-      headers: {
-        'Accept': 'text/event-stream',
-        'Cache-Control': 'no-cache',
-        'Connection': 'keep-alive'
-      }
-    };
-
-    const proxyReq = http.request(options, (proxyRes) => {
-      // Forward SSE headers
-      res.writeHead(proxyRes.statusCode, {
-        'Content-Type': 'text/event-stream',
-        'Cache-Control': 'no-cache',
-        'Connection': 'keep-alive',
-        'Access-Control-Allow-Origin': '*'
-      });
-
-      // Pipe the response
-      proxyRes.pipe(res);
-
-      // Handle proxy response end
-      proxyRes.on('end', () => {
-        res.end();
-      });
-
-      // Handle proxy errors
-      proxyRes.on('error', (error) => {
-        log.error('SSE proxy stream error:', error);
-        res.end();
-      });
-    });
-
-    // Handle proxy request errors
-    proxyReq.on('error', (error) => {
-      log.error('SSE proxy request error:', error);
-      if (!res.headersSent) {
-        res.status(500).json({ error: 'SSE proxy failed', message: error.message });
-      } else {
-        res.end();
-      }
-    });
-
-    // Handle client disconnect
-    req.on('close', () => {
-      log.debug('SSE client disconnected');
-      proxyReq.destroy();
-    });
-
-    // End the request to start receiving the response
-    proxyReq.end();
-  } catch (error) {
-    log.error('SSE proxy error:', error);
-    if (!res.headersSent) {
-      res.status(500).json({ error: 'SSE proxy failed', message: error.message });
-    } else {
-      res.end();
-    }
-  }
-});
+// SSE removed - not needed for single-user local tool
 
 // API proxy endpoint - forward all other API requests to MCP server
 app.use('/api', async (req, res) => {

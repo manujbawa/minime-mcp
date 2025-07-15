@@ -89,7 +89,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ open, onToggle }) => {
               MiniMe MCP
             </Typography>
             <Typography variant="caption" color="text.secondary">
-              v0.1.7
+              v0.2.0
             </Typography>
           </Box>
         </Box>

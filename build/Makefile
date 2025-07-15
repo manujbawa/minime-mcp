@@ -2,7 +2,7 @@
 
 # Container configuration
 CONTAINER_NAME := minimemcp
-VERSION := 0.1.7
+VERSION := 0.2.0
 VOLUME_NAME := mineme-mcp-v9
 DOCKERHUB_ORG := manujbawa
 IMAGE_NAME := $(CONTAINER_NAME):$(VERSION)

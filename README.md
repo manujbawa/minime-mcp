@@ -1,4 +1,4 @@
-# MiniMe-MCP v0.1.7-v2
+# MiniMe-MCP v0.2.0
 
 # 🚀 **The IDE Agent upgrade that creates your developer digital twin—across all your projects.**
 

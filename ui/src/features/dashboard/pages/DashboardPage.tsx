@@ -36,7 +36,7 @@ import {
 import { PageLayout } from '../../../components/layout/PageLayout';
 import { AnalyticsAPI, ProjectsAPI, HealthAPI } from '../../../services/api';
 import { useApp } from '../../../contexts/AppContext';
-import { useWebSocket } from '../../../contexts/WebSocketContext';
+import { useRefresh } from '../../../contexts/RefreshContext';
 import { 
   MemoryGrowthChart, 
   MemoryDistributionChart, 
@@ -108,7 +108,7 @@ const StatCard: React.FC<StatCardProps> = ({
 
 export const DashboardPage: React.FC = () => {
   const { addNotification } = useApp();
-  const { subscribe, isConnected } = useWebSocket();
+  const { refreshKey } = useRefresh();
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [selectedProject, setSelectedProject] = useState<string>('all');
@@ -161,7 +161,7 @@ export const DashboardPage: React.FC = () => {
     // Refresh every 30 seconds
     const interval = setInterval(fetchDashboardData, 30000);
     return () => clearInterval(interval);
-  }, []);
+  }, [refreshKey]); // Also refresh when refreshKey changes
 
   // Reload data when project filter changes (but only after initial load)
   useEffect(() => {

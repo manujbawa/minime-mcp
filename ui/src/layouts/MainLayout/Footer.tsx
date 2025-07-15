@@ -15,7 +15,7 @@ export const Footer: React.FC = () => {
       }}
     >
       <Typography variant="body2" color="text.secondary" align="center">
-        MiniMe MCP v0.1.7 | {' '}
+        MiniMe MCP v0.2.0 | {' '}
         <Link
           color="inherit"
           href="https://github.com/anthropics/mcp"

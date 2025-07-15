@@ -122,7 +122,7 @@ export default function mcpRoutes(app, services) {
       
       res.json({
         message: 'MCP server ready with Streamable HTTP transport',
-        version: "0.1.7",
+        version: "0.2.0",
         transport: {
           type: 'Streamable HTTP MCP',
           protocol: 'Model Context Protocol',
