@@ -174,6 +174,7 @@ Your code. Your patterns. Your decisions. **Remembered. Connected. Evolved.**
 # Pull and run the Docker image (auto-selects ARM64 or AMD64)
 docker run -d \
   --name minimemcp \
+  --restart unless-stopped \
   -p 5432:5432 \
   -p 8000:8000 \
   -p 9000:9000 \
