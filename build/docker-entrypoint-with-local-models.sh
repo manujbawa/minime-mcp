@@ -205,7 +205,7 @@ start_mcp_server() {
     
     export DATABASE_URL="postgresql://$POSTGRES_USER:$POSTGRES_PASSWORD@localhost:5432/$POSTGRES_DB"
     export MCP_PORT="${MCP_PORT:-8000}"
-    export UI_PORT="${UI_PORT:-8080}"
+    export UI_PORT="${UI_PORT:-9000}"
     export NODE_ENV="${NODE_ENV:-production}"
     export DOCKER_ENV="true"
     export OLLAMA_HOST_URL="${OLLAMA_HOST_URL:-http://host.docker.internal:11434}"
