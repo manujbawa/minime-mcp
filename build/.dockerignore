@@ -1,0 +1,31 @@
+# Build and development files
+Dockerfile
+docker-compose.yml
+docker-compose.*.yml
+Makefile
+README.md
+.gitignore
+.git/
+
+# Node.js files
+node_modules/
+npm-debug.log*
+.npm
+
+# Logs
+logs/
+*.log
+
+# IDE files
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Temporary files
+*.tmp
+*.temp
