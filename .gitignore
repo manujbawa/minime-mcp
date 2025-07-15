@@ -31,7 +31,8 @@ npm-debug.log*
 
 # Build artifacts
 dist/
-build/
+# Don't ignore build directory - we want to track Dockerfiles and scripts
+# build/
 local_build_scripts/
 
 # Vendored dependencies (large binaries)
