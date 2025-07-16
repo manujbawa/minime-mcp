@@ -177,15 +177,16 @@ docker run -d \
   --restart unless-stopped \
   -p 5432:5432 \
   -p 8000:8000 \
-  -p 9000:9000 \
+  -p 9090:9090 \
   -v minime-mcp-v9:/data \
   -e POSTGRES_PASSWORD=minime_password \
+  -e UI_PORT=9090 \
   manujbawa/minimemcp:latest
 ```
 
 **That's it!** MiniMe-MCP is now running:
 - 📍 **MCP API**: http://localhost:8000
-- 📍 **Web UI**: http://localhost:9000
+- 📍 **Web UI**: http://localhost:9090
 - 🏥 **Health Check**: http://localhost:8000/health
 
 ## 🛠️ MCP Tools for Your IDE
@@ -236,7 +237,8 @@ docker run -d \
   --name minimemcp \
   -e LLM_MODEL="llama2:13b" \
   -e POSTGRES_PASSWORD=minime_password \
-  -p 5432:5432 -p 8000:8000 -p 9000:9000 \
+  -e UI_PORT=9090 \
+  -p 5432:5432 -p 8000:8000 -p 9090:9090 \
   -v minime-mcp-v9:/data \
   manujbawa/minimemcp:latest
 ```
@@ -246,9 +248,9 @@ docker run -d \
 docker run -d \
   --name minimemcp \
   -e MCP_PORT="8080" \
-  -e UI_PORT="3000" \
+  -e UI_PORT="9090" \
   -e POSTGRES_PASSWORD=minime_password \
-  -p 5432:5432 -p 8080:8080 -p 3000:3000 \
+  -p 5432:5432 -p 8080:8080 -p 9090:9090 \
   -v minime-mcp-v9:/data \
   manujbawa/minimemcp:latest
 ```

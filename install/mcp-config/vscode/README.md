@@ -77,6 +77,44 @@ Alternatively, configure GitHub Copilot directly in VS Code:
 
 4. **Restart VS Code**
 
+### Option 3: Project-Level Configuration
+
+For team projects or specific workspace configurations:
+
+1. **Create a `.vscode` folder** in your project root (if it doesn't exist)
+
+2. **Create `.vscode/settings.json`** with the following configuration:
+   ```json
+   {
+     "servers": {
+       "minime-mcp": {
+         "type": "stdio",           // Required for local command servers
+         "command": "minime-mcp",   // Command to start your server
+         "args": [],                // Add any command-line arguments here
+         "env": {
+           "MINIME_SERVER_URL": "http://localhost:8000",
+           "MINIME_DEBUG": "false"
+         }
+       }
+     }
+   }
+   ```
+
+3. **Commit this file** to your repository so all team members have the same MCP configuration
+
+4. **Install the MiniMe-MCP client** (team members need to do this):
+   ```bash
+   npm install -g @minimemcp/mcp-client
+   ```
+
+5. **Restart VS Code** to load the project-level configuration
+
+**Benefits of project-level configuration:**
+- ✅ Consistent configuration across the team
+- ✅ No need to modify global VS Code settings
+- ✅ Configuration is version-controlled
+- ✅ Works alongside global configurations
+
 ## Configuration Options
 
 - `MINIME_SERVER_URL`: URL of your MiniMe-MCP server (default: http://localhost:8000)
