@@ -14,6 +14,7 @@ import adminRoutes from './admin.js';
 import taskRoutes from './tasks.js';
 import ollamaRoutes from './ollama.js';
 import mcpRoutes from './mcp.js';
+import logsRoutes from './logs.js';
 // import sseRoutes from './sse.js'; // Removed - not needed for single-user local tool
 import logger from '../utils/logger.js';
 
@@ -29,7 +30,8 @@ export function registerRoutes(app, services) {
     { name: 'admin', register: adminRoutes },
     { name: 'tasks', register: taskRoutes },
     { name: 'ollama', register: ollamaRoutes },
-    { name: 'mcp', register: mcpRoutes }
+    { name: 'mcp', register: mcpRoutes },
+    { name: 'logs', register: logsRoutes }
     // { name: 'sse', register: sseRoutes } // Removed - not needed
   ];
 

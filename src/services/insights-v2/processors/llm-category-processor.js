@@ -209,13 +209,33 @@ DO NOT include any explanation or text outside the JSON array.`;
             // Log the full raw response
             this.logger.info('[LLMCategoryProcessor] FULL LLM response:', response.content);
             
+            // Check for repetitive symbols before parsing
+            if (/[@#*]{5,}/.test(response.content)) {
+                this.logger.error('[LLMCategoryProcessor] Response contains repetitive symbols');
+                return [];
+            }
+            
             // Parse the response
             const cleanedResponse = response.content.trim()
                 .replace(/```json\n?/g, '')
                 .replace(/```\n?/g, '')
                 .trim();
             
-            const templates = JSON.parse(cleanedResponse);
+            // Validate it's not empty or invalid
+            if (!cleanedResponse || cleanedResponse.length < 2) {
+                this.logger.error('[LLMCategoryProcessor] Empty or invalid response');
+                return [];
+            }
+            
+            let templates;
+            try {
+                templates = JSON.parse(cleanedResponse);
+            } catch (jsonError) {
+                this.logger.error('[LLMCategoryProcessor] Failed to parse JSON response:', jsonError);
+                this.logger.debug('Cleaned response that failed:', cleanedResponse);
+                return [];
+            }
+            
             if (Array.isArray(templates) && templates.length > 0) {
                 // Validate that templates exist
                 const validTemplates = templates
@@ -473,6 +493,12 @@ DO NOT include any explanation or text outside the JSON array.`;
         try {
             const content = response.content || '';
             
+            // Check for repetitive symbols
+            if (/[@#*]{5,}/.test(content)) {
+                this.logger.error('[LLMCategoryProcessor] Technology response contains repetitive symbols');
+                return [];
+            }
+            
             // Try to extract JSON from code block first
             let jsonStr = '';
             const codeBlockMatch = content.match(/```json\n([\s\S]*?)\n```/);
@@ -541,6 +567,12 @@ DO NOT include any explanation or text outside the JSON array.`;
     parsePatterns(response) {
         try {
             const content = response.content || '';
+            
+            // Check for repetitive symbols
+            if (/[@#*]{5,}/.test(content)) {
+                this.logger.error('[LLMCategoryProcessor] Pattern response contains repetitive symbols');
+                return [];
+            }
             
             // Log the raw response for debugging
             this.logger.info('[LLMCategoryProcessor] parsePatterns - Raw LLM response:', {

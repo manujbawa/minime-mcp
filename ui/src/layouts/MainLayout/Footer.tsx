@@ -1,5 +1,6 @@
 import React from 'react';
 import { Box, Typography, Link } from '@mui/material';
+import { APP_VERSION } from '../../config/version';
 
 export const Footer: React.FC = () => {
   return (
@@ -15,7 +16,7 @@ export const Footer: React.FC = () => {
       }}
     >
       <Typography variant="body2" color="text.secondary" align="center">
-        MiniMe MCP v0.2.0 | {' '}
+        MiniMe MCP v{APP_VERSION} | {' '}
         <Link
           color="inherit"
           href="https://github.com/anthropics/mcp"

@@ -296,7 +296,17 @@ export const InsightColumns: React.FC<InsightColumnsProps> = ({
   };
 
   return (
-    <Box sx={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 3, height: '100%' }}>
+    <Box sx={{ 
+      display: 'grid', 
+      gridTemplateColumns: { 
+        xs: '1fr', 
+        sm: 'repeat(2, 1fr)', 
+        md: 'repeat(3, 1fr)' 
+      }, 
+      gap: { xs: 2, sm: 2, md: 3 }, 
+      height: '100%',
+      overflow: 'hidden'
+    }}>
       {categorizedInsights.map((column, index) => (
         <Box key={index} sx={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
           {/* Column Header */}

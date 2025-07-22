@@ -210,8 +210,10 @@ Configure your IDE to use MiniMe-MCP tools:
 
 - **[Claude Desktop](install/mcp-config/claude-code/README.md)** - Full MCP support
 - **[Cursor](install/mcp-config/cursor/README.md)** - Full MCP support
-- **[VS Code](install/mcp-config/vscode/README.md)** - Supported with Copilot
+- **[VS Code](install/mcp-config/vscode/README.md)** - Supported with GitHub Copilot Chat v0.29+ (requires VS Code 1.102+)
 - **[Windsurf](install/mcp-config/windsurf/README.md)** - Full MCP support
+
+**Note for GitHub Organization users**: Your administrator must enable MCP in the organization's Copilot settings on GitHub.
 
 Once configured, your AI assistant will have access to persistent memory and intelligent tools directly in your IDE.
 

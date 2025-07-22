@@ -26,6 +26,7 @@ import {
   ToggleButtonGroup,
   Grid
 } from '@mui/material';
+import { PageLayout } from '../../../components/layout/PageLayout';
 import {
   Lightbulb,
   AutoAwesome,
@@ -215,17 +216,16 @@ export const InsightsV2Page: React.FC = () => {
   }
 
   return (
-    <Box sx={{ p: 3 }}>
-      <Box sx={{ mb: 3, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-        <Typography variant="h4" component="h1" sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-          <AutoAwesome /> Insights & Meta-Learning
-        </Typography>
+    <PageLayout
+      title="Insights & Meta-Learning"
+      actions={
         <Tooltip title="Refresh">
           <IconButton onClick={loadData}>
             <Refresh />
           </IconButton>
         </Tooltip>
-      </Box>
+      }
+    >
 
       {/* Advanced Search Bar */}
       <InsightSearchBar
@@ -235,7 +235,13 @@ export const InsightsV2Page: React.FC = () => {
         types={types}
       />
 
-      <Paper sx={{ width: '100%' }}>
+      <Paper sx={{ 
+        width: '100%', 
+        overflowX: 'auto',
+        '& > *': {
+          minWidth: 'fit-content'
+        }
+      }}>
         <Box sx={{ borderBottom: 1, borderColor: 'divider', display: 'flex', justifyContent: 'space-between', alignItems: 'center', px: 2 }}>
           {/* Removed tabs since we only have AI Insights now */}
           <Box sx={{ display: 'flex', alignItems: 'center', mb: 3 }}>
@@ -648,6 +654,6 @@ export const InsightsV2Page: React.FC = () => {
         )}
       </Dialog>
 
-    </Box>
+    </PageLayout>
   );
 };

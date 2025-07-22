@@ -59,8 +59,8 @@ class ReasoningService {
         const branchTypes = ['alternative', 'branch', 'option', 'variant', 'fork'];
         const isBranchThought = branchTypes.includes(thoughtType.toLowerCase());
         
-        // Validate thought type - now includes 'general' as a fallback
-        const validTypes = ['reasoning', 'conclusion', 'question', 'hypothesis', 'observation', 'assumption', 'general'];
+        // Validate thought type - now includes 'general' and 'analysis'
+        const validTypes = ['reasoning', 'conclusion', 'question', 'hypothesis', 'observation', 'assumption', 'general', 'analysis'];
         if (!validTypes.includes(thoughtType)) {
             // Map common mistakes to valid types
             if (thoughtType === 'answer') {

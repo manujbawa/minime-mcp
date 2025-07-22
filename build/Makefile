@@ -2,7 +2,7 @@
 
 # Container configuration
 CONTAINER_NAME := minimemcp
-VERSION := 0.2.0
+VERSION := $(shell cat ../VERSION)
 VOLUME_NAME := mineme-mcp-v9
 DOCKERHUB_ORG := manujbawa
 IMAGE_NAME := $(CONTAINER_NAME):$(VERSION)
@@ -12,7 +12,7 @@ DOCKERHUB_IMAGE := $(DOCKERHUB_ORG)/$(CONTAINER_NAME):$(VERSION)
 DOCKERHUB_LATEST := $(DOCKERHUB_ORG)/$(CONTAINER_NAME):latest
 DOCKERHUB_BASE := $(DOCKERHUB_ORG)/$(CONTAINER_NAME)-base:latest
 
-.PHONY: help up down build build-ui build-docker build-base build-fast build-fast-v2 lint-ui logs shell status clean restart health test publish tag-hub login-hub init-volume clean-volume fresh-start seed-database
+.PHONY: help up down build build-ui build-docker build-base build-fast build-fast-v2 lint-ui logs shell status clean restart health test publish tag-hub login-hub init-volume clean-volume fresh-start seed-database version version-patch version-minor version-major version-set
 
 # Default target - do everything!
 all: setup-env vendor-deps build up status
@@ -98,9 +98,17 @@ help:
 	@echo "  mcp-release - Full release process (test, publish, git tag)"
 	@echo "  mcp-help    - Show all MCP client targets"
 	@echo ""
+	@echo "🏷️ Version Management:"
+	@echo "  version        - Show current version ($(VERSION))"
+	@echo "  version-patch  - Bump patch version (X.X.+1)"
+	@echo "  version-minor  - Bump minor version (X.+1.0)"
+	@echo "  version-major  - Bump major version (+1.0.0)"
+	@echo "  version-set    - Set specific version"
+	@echo ""
 	@echo "Environment:"
 	@echo "  MCP_PORT=${MCP_PORT}"
 	@echo "  POSTGRES_PASSWORD=${POSTGRES_PASSWORD}"
+	@echo "  VERSION=$(VERSION)"
 
 # Volume Management
 init-volume:
@@ -137,7 +145,7 @@ up: init-volume
 		-e POSTGRES_PASSWORD=minime_password \
 		-e MCP_PORT=8000 \
 		-e UI_PORT=9000 \
-		-e USE_LOCAL_MODELS=true \
+		-e USE_LOCAL_MODELS=false \
 		-e LOAD_SAMPLE_DATA=${LOAD_SAMPLE_DATA:-true} \
 		-e MCP_DEBUG=${MCP_DEBUG:-false} \
 		$(IMAGE_LATEST)
@@ -160,7 +168,7 @@ up-debug: init-volume
 		-e POSTGRES_PASSWORD=minime_password \
 		-e MCP_PORT=8000 \
 		-e UI_PORT=9000 \
-		-e USE_LOCAL_MODELS=true \
+		-e USE_LOCAL_MODELS=false \
 		-e LOAD_SAMPLE_DATA=${LOAD_SAMPLE_DATA:-true} \
 		-e MCP_DEBUG=${MCP_DEBUG:-false} \
 		-e NODE_OPTIONS="--inspect=0.0.0.0:9229 --max-old-space-size=1024" \
@@ -187,7 +195,7 @@ build-base:
 	docker build -f Dockerfile.base \
 		--build-arg USER_ID=1001 \
 		--build-arg GROUP_ID=1001 \
-		--build-arg USE_LOCAL_MODELS=true \
+		--build-arg USE_LOCAL_MODELS=false \
 		--no-cache \
 		-t $(BASE_IMAGE_NAME) \
 		..
@@ -201,8 +209,8 @@ build-fast:
 		echo "💡 Run 'make build-base' first to create the base image."; \
 		exit 1; \
 	fi
-	@echo "🎨 Building UI assets..."
-	@cd ../ui && npm run build
+	@echo "🎨 Building UI assets with version $(VERSION)..."
+	@cd ../ui && VITE_APP_VERSION=$(VERSION) npm run build
 	@echo "🚀 Building fast app image: $(IMAGE_NAME)..."
 	docker build -f Dockerfile.fast \
 		--build-arg USER_ID=1001 \
@@ -224,17 +232,17 @@ build-fast-v2:
 		echo "💡 Run 'make build-base' first to create the base image."; \
 		exit 1; \
 	fi
-	@echo "🎨 Building UI assets..."
-	@cd ../ui && npm run build
-	@echo "🚀 Building fast app image with Unified Insights v2: $(IMAGE_NAME)-v2..."
+	@echo "🎨 Building UI assets with version $(VERSION)..."
+	@cd ../ui && VITE_APP_VERSION=$(VERSION) npm run build
+	@echo "🚀 Building fast app image with Unified Insights v2: $(IMAGE_NAME)..."
 	@echo "✨ Features: Unified pattern detection, LLM category processing, smart enrichment"
 	docker build -f Dockerfile.fast.v2 \
 		--build-arg USER_ID=1001 \
 		--build-arg GROUP_ID=1001 \
-		-t $(IMAGE_NAME)-v2 \
-		-t $(IMAGE_LATEST)-v2 \
+		-t $(IMAGE_NAME) \
+		-t $(IMAGE_LATEST) \
 		..
-	@echo "✅ Fast v2 build complete: $(IMAGE_NAME)-v2"
+	@echo "✅ Fast v2 build complete: $(IMAGE_NAME)"
 	@echo "📊 Running database migrations for v2 schema..."
 	@echo "🔄 Restarting container with v2 features enabled..."
 	@make down 2>/dev/null || true
@@ -247,12 +255,12 @@ build-fast-v2:
 		-e POSTGRES_PASSWORD=minime_password \
 		-e MCP_PORT=8000 \
 		-e UI_PORT=9000 \
-		-e USE_LOCAL_MODELS=true \
+		-e USE_LOCAL_MODELS=false \
 		-e LOAD_SAMPLE_DATA=${LOAD_SAMPLE_DATA:-true} \
 		-e MCP_DEBUG=${MCP_DEBUG:-false} \
 		-e INSIGHTS_VERSION=v2 \
 		-e ENABLE_UNIFIED_INSIGHTS=true \
-		$(IMAGE_LATEST)-v2
+		$(IMAGE_LATEST)
 	@echo "✅ Container restarted with Unified Insights v2!"
 	@echo "🎯 New v2 features enabled: Pattern detection, LLM categorization, Smart enrichment"
 
@@ -264,8 +272,8 @@ build-debug:
 		echo "💡 Run 'make build-base' first to create the base image."; \
 		exit 1; \
 	fi
-	@echo "🎨 Building UI assets..."
-	@cd ../ui && npm run build
+	@echo "🎨 Building UI assets with version $(VERSION)..."
+	@cd ../ui && VITE_APP_VERSION=$(VERSION) npm run build
 	@echo "🚀 Building fast app image with debug: $(IMAGE_NAME)..."
 	docker build -f Dockerfile.fast \
 		--build-arg USER_ID=1001 \
@@ -298,8 +306,8 @@ lint-ui:
 build-ui:
 	@echo "🔍 Running ESLint checks..."
 	@cd ../ui && npm run lint || (echo "❌ ESLint errors found, aborting build!" && exit 1)
-	@echo "🎨 Building fresh UI assets..."
-	@cd ../ui && npm run build
+	@echo "🎨 Building fresh UI assets with version $(VERSION)..."
+	@cd ../ui && VITE_APP_VERSION=$(VERSION) npm run build
 	@echo "✅ UI build complete"
 
 # Build Docker image with no-cache to ensure fresh UI assets
@@ -315,7 +323,7 @@ build-docker: build-ui
 	docker build --no-cache -f Dockerfile \
 		--build-arg USER_ID=1001 \
 		--build-arg GROUP_ID=1001 \
-		--build-arg USE_LOCAL_MODELS=true \
+		--build-arg USE_LOCAL_MODELS=false \
 		-t $(IMAGE_NAME) \
 		-t $(IMAGE_LATEST) \
 		..
@@ -394,8 +402,8 @@ test: health
 # Development targets
 dev-up:
 	@echo "🧪 Starting development mode with local models..."
-	make build USE_LOCAL_MODELS=true
-	make up USE_LOCAL_MODELS=true LOAD_SAMPLE_DATA=true
+	make build USE_LOCAL_MODELS=false
+	make up USE_LOCAL_MODELS=false LOAD_SAMPLE_DATA=true
 
 # Development mode with UI hot reload (volume mounting)
 dev-hot: init-volume
@@ -415,7 +423,7 @@ dev-hot: init-volume
 		-e POSTGRES_PASSWORD=minime_password \
 		-e MCP_PORT=8000 \
 		-e UI_PORT=9000 \
-		-e USE_LOCAL_MODELS=true \
+		-e USE_LOCAL_MODELS=false \
 		-e LOAD_SAMPLE_DATA=${LOAD_SAMPLE_DATA:-true} \
 		-e NODE_ENV=development \
 		-e MCP_DEBUG=${MCP_DEBUG:-false} \
@@ -432,9 +440,9 @@ dev-hot: init-volume
 
 # Quick UI rebuild for hot reload mode
 ui-rebuild:
-	@echo "🔄 Rebuilding UI for hot reload..."
+	@echo "🔄 Rebuilding UI for hot reload with version $(VERSION)..."
 	@cd ../ui && npm run lint || (echo "❌ ESLint errors found!" && exit 1)
-	@cd ../ui && npm run build
+	@cd ../ui && VITE_APP_VERSION=$(VERSION) npm run build
 	@echo "✅ UI rebuilt! Refresh browser to see changes"
 	@echo "📱 Access: http://localhost:9000"
 
@@ -521,37 +529,59 @@ dev-start: setup-env build
 	@echo "📱 Use 'make logs' to watch progress"
 
 # Multi-platform builds
+
+# Build multi-arch for current platform only (for local testing)
+build-multiarch-local:
+	@echo "🏗️ Building multi-arch image for current platform only..."
+	@echo "🎨 Building UI assets with version $(VERSION)..."
+	@cd ../ui && VITE_APP_VERSION=$(VERSION) npm run build
+	@echo "🔍 Using buildx builder..."
+	docker buildx use multiarch-builder || docker buildx create --name multiarch-builder --use
+	@echo "🔨 Building for current platform and loading..."
+	docker buildx build -f Dockerfile.fast.v2 \
+		--build-arg USER_ID=1001 \
+		--build-arg GROUP_ID=1001 \
+		-t $(IMAGE_NAME) \
+		-t $(IMAGE_LATEST) \
+		--load \
+		..
+	@echo "✅ Image built and loaded for current platform"
+
 build-multiarch-base:
 	@echo "🌍 Building multi-platform base image (AMD64 + ARM64)..."
 	@echo "🔍 Setting up buildx..."
 	docker buildx use multiarch-builder || docker buildx create --name multiarch-builder --use
 	@echo "🔨 Building base image for multiple platforms..."
+	@echo "⚠️  Note: Multi-platform images can't be loaded locally. Use 'make build-base' for local testing."
 	docker buildx build -f Dockerfile.base \
 		--platform linux/amd64,linux/arm64 \
 		--build-arg USER_ID=1001 \
 		--build-arg GROUP_ID=1001 \
-		--build-arg USE_LOCAL_MODELS=true \
+		--build-arg USE_LOCAL_MODELS=false \
 		-t $(BASE_IMAGE_NAME) \
-		--load \
 		..
-	@echo "✅ Multi-platform base image built locally"
+	@echo "✅ Multi-platform base image built (in builder cache)"
+	@echo "💡 To push to registry, use: make publish-multiarch-base"
 
 build-multiarch-v2:
 	@echo "🌍 Building multi-platform app v2 image (AMD64 + ARM64)..."
-	@echo "🎨 Building UI assets..."
-	@cd ../ui && npm run build
+	@echo "🎨 Building UI assets with version $(VERSION)..."
+	@cd ../ui && VITE_APP_VERSION=$(VERSION) npm run build
 	@echo "🔍 Using buildx builder..."
 	docker buildx use multiarch-builder || docker buildx create --name multiarch-builder --use
 	@echo "🔨 Building v2 image for multiple platforms..."
+	@echo "⚠️  Note: Multi-platform images can't be loaded locally. Use 'make build-fast-v2' for local testing."
+	@echo "📦 Building and pushing to registry..."
 	docker buildx build -f Dockerfile.fast.v2 \
 		--platform linux/amd64,linux/arm64 \
 		--build-arg USER_ID=1001 \
 		--build-arg GROUP_ID=1001 \
-		-t $(IMAGE_NAME)-v2 \
-		-t $(IMAGE_LATEST)-v2 \
-		--load \
+		-t $(IMAGE_NAME) \
+		-t $(IMAGE_LATEST) \
 		..
-	@echo "✅ Multi-platform v2 image built locally"
+	@echo "✅ Multi-platform v2 image built (in builder cache)"
+	@echo "💡 To push to registry, use: make publish-multiarch-v2"
+	@echo "💡 For local testing, use: make build-fast-v2"
 
 publish-multiarch-base:
 	@echo "🌍 Building and pushing multi-platform base image to Docker Hub..."
@@ -562,7 +592,7 @@ publish-multiarch-base:
 		--platform linux/amd64,linux/arm64 \
 		--build-arg USER_ID=1001 \
 		--build-arg GROUP_ID=1001 \
-		--build-arg USE_LOCAL_MODELS=true \
+		--build-arg USE_LOCAL_MODELS=false \
 		-t $(DOCKERHUB_BASE) \
 		--push \
 		..
@@ -570,15 +600,17 @@ publish-multiarch-base:
 
 publish-multiarch-v2:
 	@echo "🌍 Building and pushing multi-platform v2 image to Docker Hub..."
-	@echo "🎨 Building UI assets..."
-	@cd ../ui && npm run build
+	@echo "🎨 Building UI assets with version $(VERSION)..."
+	@cd ../ui && VITE_APP_VERSION=$(VERSION) npm run build
 	@echo "🔍 Using buildx builder..."
 	docker buildx use multiarch-builder || docker buildx create --name multiarch-builder --use
-	@echo "🔨 Building and pushing v2 image..."
-	docker buildx build -f Dockerfile.fast.v2 \
+	@echo "🔨 Building and pushing v2 image (self-contained multi-arch build)..."
+	docker buildx build -f Dockerfile.fast.v2.multiarch \
 		--platform linux/amd64,linux/arm64 \
+		--build-arg VERSION=$(VERSION) \
 		--build-arg USER_ID=1001 \
 		--build-arg GROUP_ID=1001 \
+		--build-arg USE_LOCAL_MODELS=false \
 		-t $(DOCKERHUB_IMAGE) \
 		-t $(DOCKERHUB_LATEST) \
 		--push \
@@ -586,6 +618,9 @@ publish-multiarch-v2:
 	@echo "✅ Multi-platform v2 image pushed to Docker Hub"
 	@echo "🔗 Available at: https://hub.docker.com/r/$(DOCKERHUB_ORG)/$(CONTAINER_NAME)"
 	@echo ""
+	@echo "📋 Images pushed:"
+	@echo "   - $(DOCKERHUB_IMAGE) (version tag)"
+	@echo "   - $(DOCKERHUB_LATEST) (latest tag)"
 	@echo "📋 Platforms supported: linux/amd64, linux/arm64"
 
 publish-multiarch: publish-multiarch-base publish-multiarch-v2
@@ -621,6 +656,63 @@ publish: tag-hub
 # Legacy compatibility (from old Makefile)
 run: up
 stop: down
+
+# ==========================================
+# Version Management
+# ==========================================
+
+# Show current version
+version:
+	@echo "Current version: $(VERSION)"
+	@echo ""
+	@echo "Version management commands:"
+	@echo "  make version-patch  - Increment patch version ($(VERSION) -> X.X.+1)"
+	@echo "  make version-minor  - Increment minor version ($(VERSION) -> X.+1.0)"
+	@echo "  make version-major  - Increment major version ($(VERSION) -> +1.0.0)"
+	@echo "  make version-set VERSION=X.X.X - Set specific version"
+
+# Increment patch version
+version-patch:
+	@./update-version.sh patch
+	@echo ""
+	@echo "🔄 Version updated! Run 'make build-fast-v2' to build with new version"
+
+# Increment minor version  
+version-minor:
+	@./update-version.sh minor
+	@echo ""
+	@echo "🔄 Version updated! Run 'make build-fast-v2' to build with new version"
+
+# Increment major version
+version-major:
+	@./update-version.sh major
+	@echo ""
+	@echo "🔄 Version updated! Run 'make build-fast-v2' to build with new version"
+
+# Set specific version
+version-set:
+	@if [ -z "$(NEW_VERSION)" ]; then \
+		echo "❌ Error: NEW_VERSION not specified"; \
+		echo "Usage: make version-set NEW_VERSION=X.X.X"; \
+		exit 1; \
+	fi
+	@./update-version.sh set $(NEW_VERSION)
+	@echo ""
+	@echo "🔄 Version updated! Run 'make build-fast-v2' to build with new version"
+
+# Sync version to package-lock files
+version-sync:
+	@./sync-version.sh
+
+# Combined commands for common workflows
+release-patch: version-patch version-sync build-fast-v2
+	@echo "✅ Patch release complete! New version: $$(cat ../VERSION)"
+
+release-minor: version-minor version-sync build-fast-v2
+	@echo "✅ Minor release complete! New version: $$(cat ../VERSION)"
+
+release-major: version-major version-sync build-fast-v2
+	@echo "✅ Major release complete! New version: $$(cat ../VERSION)"
 
 # ==========================================
 # MCP Client NPM Package Management

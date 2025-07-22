@@ -21,12 +21,25 @@ export class ConfigThresholdsService {
             
             // Clustering parameters
             clustering: {
-                similarityThreshold: 0.7,   // Cosine similarity for clustering
-                minClusterSize: 3,          // Minimum memories per cluster
-                targetClusterSize: 8,       // Target cluster size
-                maxClusterSize: 15,         // Maximum memories per cluster
-                crossProjectBonus: 0.1,     // Bonus for cross-project patterns
-                maxTokensPerCluster: 8000   // Token limit per cluster
+                // Similarity thresholds
+                embeddingSimilarityThreshold: 0.65,    // Cosine similarity for embeddings
+                tagSimilarityThreshold: 0.3,           // Jaccard similarity for tags (lowered from 0.6)
+                hybridThreshold: 0.5,                  // Combined similarity threshold
+                
+                // Weights for hybrid scoring
+                embeddingWeight: 0.7,                  // Weight for embedding similarity
+                tagWeight: 0.2,                        // Weight for tag similarity
+                timeWeight: 0.1,                       // Weight for time proximity
+                
+                // Cluster size limits
+                minClusterSize: 2,                     // Minimum memories per cluster (lowered from 3)
+                targetClusterSize: 8,                  // Target cluster size
+                maxClusterSize: 20,                    // Maximum memories per cluster (increased from 15)
+                
+                // Time and project parameters
+                timeProximityDays: 14,                 // Time window for clustering (increased from 7)
+                crossProjectBonus: 0.1,                // Bonus for cross-project patterns
+                maxTokensPerCluster: 8000              // Token limit per cluster
             },
             
             // Learning journey thresholds

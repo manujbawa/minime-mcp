@@ -99,11 +99,71 @@ EOF
     if /usr/lib/postgresql/15/bin/psql -U "$POSTGRES_USER" -d "$POSTGRES_DB" -c "SELECT 1 FROM information_schema.tables WHERE table_name = 'projects' LIMIT 1;" | grep -q "1 row"; then
         log "Database schema already exists, checking for new migrations..."
         
-        # Always run migration check for existing databases
-        if /usr/lib/postgresql/15/bin/psql -U "$POSTGRES_USER" -d "$POSTGRES_DB" -f /app/database/run-migrations.sql >/dev/null 2>&1; then
-            log "Migration check completed"
+        # Run migrations for existing databases
+        if [ -f /app/database/MINIME_MIGRATIONS_05.sql ]; then
+            log "Found migration file: MINIME_MIGRATIONS_05.sql"
+            log "Running database migrations..."
+            
+            # Create a temporary file to capture migration output
+            MIGRATION_LOG="/tmp/migration_output.log"
+            
+            # Run migrations and capture output
+            if /usr/lib/postgresql/15/bin/psql -U "$POSTGRES_USER" -d "$POSTGRES_DB" -f /app/database/MINIME_MIGRATIONS_05.sql > "$MIGRATION_LOG" 2>&1; then
+                log "✅ Migrations completed successfully"
+                # Show any NOTICE messages from the migration
+                if grep -q "NOTICE" "$MIGRATION_LOG"; then
+                    log "Migration notices:"
+                    grep "NOTICE" "$MIGRATION_LOG" | while read line; do
+                        log "  $line"
+                    done
+                fi
+            else
+                warn "⚠️ Migration execution had issues (this may be normal if migrations were already applied)"
+                log "Migration output:"
+                cat "$MIGRATION_LOG" | while read line; do
+                    log "  $line"
+                done
+            fi
+            
+            # Clean up
+            rm -f "$MIGRATION_LOG"
         else
-            warn "Migration check failed, but continuing..."
+            log "No migration file found, skipping migrations"
+        fi
+        
+        # Run validation script
+        if [ -f /app/database/MINIME_VALIDATION_1000.sql ]; then
+            log "Running database validation..."
+            VALIDATION_LOG="/tmp/validation_output.log"
+            
+            if /usr/lib/postgresql/15/bin/psql -U "$POSTGRES_USER" -d "$POSTGRES_DB" -f /app/database/MINIME_VALIDATION_1000.sql > "$VALIDATION_LOG" 2>&1; then
+                log "✅ Validation completed"
+                
+                # Extract overall status
+                OVERALL_STATUS=$(grep -E "^(✅|⚠️|❌)" "$VALIDATION_LOG" | tail -1)
+                if [ ! -z "$OVERALL_STATUS" ]; then
+                    log "$OVERALL_STATUS"
+                fi
+                
+                # Show any failures
+                if grep -q "FAILED" "$VALIDATION_LOG"; then
+                    log "Failed validations:"
+                    grep "FAILED" "$VALIDATION_LOG" | head -10 | while read line; do
+                        log "  $line"
+                    done
+                fi
+                
+                # Show summary
+                grep -A 5 "status | count" "$VALIDATION_LOG" | while read line; do
+                    if [ ! -z "$line" ]; then
+                        log "  $line"
+                    fi
+                done
+            else
+                warn "Validation script failed to execute"
+            fi
+            
+            rm -f "$VALIDATION_LOG"
         fi
         
         # Sample data is now included in minime-startup.sql
@@ -122,8 +182,12 @@ EOF
         cat /app/database/MINIME_INSIGHT_TEMPLATES_INSERT_03.sql >> /tmp/complete_init.sql
         echo -e "\n\n-- =====================================================\n-- COMPLETION MARKER FROM MINIME_DATA_INSERTS_COMPLETE_MARKER_04.sql\n-- =====================================================\n" >> /tmp/complete_init.sql
         cat /app/database/MINIME_DATA_INSERTS_COMPLETE_MARKER_04.sql >> /tmp/complete_init.sql
+        echo -e "\n\n-- =====================================================\n-- MIGRATIONS FROM MINIME_MIGRATIONS_05.sql\n-- =====================================================\n" >> /tmp/complete_init.sql
+        cat /app/database/MINIME_MIGRATIONS_05.sql >> /tmp/complete_init.sql
+        echo -e "\n\n-- =====================================================\n-- VALIDATION FROM MINIME_VALIDATION_1000.sql\n-- =====================================================\n" >> /tmp/complete_init.sql
+        cat /app/database/MINIME_VALIDATION_1000.sql >> /tmp/complete_init.sql
         
-        log "Executing complete initialization script..."
+        log "Executing complete initialization script (this includes migrations)..."
         /usr/lib/postgresql/15/bin/psql -U "$POSTGRES_USER" -d "$POSTGRES_DB" -v ON_ERROR_STOP=1 -e -f /tmp/complete_init.sql 2>&1 | tee /tmp/sql_complete.log
         if [ ${PIPESTATUS[0]} -eq 0 ]; then
             log "Database initialization completed successfully"

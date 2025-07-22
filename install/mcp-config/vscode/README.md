@@ -1,156 +1,112 @@
-# Visual Studio Code MCP Configuration
+# VS Code MCP Configuration
 
-✅ **Important Clarification**: MCP support in VS Code is provided by the **GitHub Copilot extension**, not VS Code itself.
+This configuration enables MiniMe-MCP in VS Code through GitHub Copilot Chat.
 
-## Current Status
+## Prerequisites
 
-**GitHub Copilot** in VS Code has MCP support that can:
-- Auto-discover MCP servers from Cursor's configuration
-- Use the same MCP tools as Cursor
-- Work with MiniMe-MCP through the Copilot extension
+- VS Code version 1.102+ (or VS Code Insiders 1.103+)
+- GitHub Copilot Chat extension v0.29+
+- **GitHub Organization Policy**: If you're in a GitHub organization, your administrator must enable MCP in the organization's Copilot settings on GitHub
+- MiniMe-MCP server running locally at http://localhost:8000
 
-**Note**: This is Copilot's MCP integration, not native VS Code MCP support.
+## Installation
 
-## Installation Options
+### 1. Global MCP Configuration (Recommended)
 
-### Option 1: Auto-Discovery from Cursor (Recommended)
+Create or update the MCP configuration file:
 
-If you have Cursor installed with MiniMe-MCP configured, GitHub Copilot in VS Code can automatically discover and use the same MCP configuration:
+**File location:**
+- macOS: `~/Library/Application Support/Code/User/mcp.json`
+- Windows: `%APPDATA%\Code\User\mcp.json`
+- Linux: `~/.config/Code/User/mcp.json`
 
-1. **Install GitHub Copilot extension** in VS Code (if not already installed)
+**Configuration:**
+```json
+{
+  "mcpServers": {
+    "minime": {
+      "command": "npx",
+      "args": ["-y", "minime-mcp"],
+      "env": {
+        "MINIME_SERVER_URL": "http://localhost:8000",
+        "MINIME_DEBUG": "true"
+      }
+    }
+  }
+}
+```
 
-2. **Install the MiniMe-MCP client globally**:
-   ```bash
-   npm install -g @minimemcp/mcp-client
-   ```
+### 2. VS Code Settings
 
-3. **Make sure your MiniMe-MCP server is running**:
-   ```bash
-   docker ps -f name=minime-mcp
-   # If not running, start it with:
-   docker run -d \
-     --name minime-mcp \
-     -p 5432:5432 \
-     -p 8000:8000 \
-     -p 9000:9000 \
-     -v minime_data:/var/lib/postgresql/data \
-     minimemcp:latest-v2
-   ```
+Update your VS Code settings:
 
-4. **Ensure Cursor is configured with MiniMe-MCP**:
-   ```bash
-   # Check if Cursor config exists
-   ls ~/.cursor/mcp.json
-   
-   # If not, copy our config
-   cp cursor/mcp.json ~/.cursor/mcp.json
-   ```
+**File:** `~/Library/Application Support/Code/User/settings.json`
 
-5. **GitHub Copilot in VS Code should automatically discover** the MCP configuration from Cursor
+```json
+{
+    "workbench.settings.applyToAllProfiles": [
+        "chat.mcp.enabled"
+    ],
+    "github.copilot.enable": true,
+    "github.copilot.advanced": {},
+    "redhat.telemetry.enabled": true
+}
+```
 
-### Option 2: Direct GitHub Copilot Configuration
+### 3. Workspace-Specific Configuration (Optional)
 
-Alternatively, configure GitHub Copilot directly in VS Code:
+For project-specific settings, create:
 
-1. **Install GitHub Copilot extension** in VS Code
+**File:** `.vscode/mcp.json` in your project root
 
-2. **Install the MiniMe-MCP client globally**:
-   ```bash
-   npm install -g @minimemcp/mcp-client
-   ```
-
-3. **Configure MCP for Copilot** by adding to VS Code's `settings.json`:
-   ```json
-   {
-     "chat.mcp.discovery.enabled": true,
-     "chat.mcp.servers": {
-       "minime-mcp": {
-         "command": "minime-mcp",
-         "env": {
-           "MINIME_SERVER_URL": "http://localhost:8000",
-           "MINIME_DEBUG": "false"
-         }
-       }
-     }
-   }
-   ```
-
-4. **Restart VS Code**
-
-### Option 3: Project-Level Configuration
-
-For team projects or specific workspace configurations:
-
-1. **Create a `.vscode` folder** in your project root (if it doesn't exist)
-
-2. **Create `.vscode/settings.json`** with the following configuration:
-   ```json
-   {
-     "servers": {
-       "minime-mcp": {
-         "type": "stdio",           // Required for local command servers
-         "command": "minime-mcp",   // Command to start your server
-         "args": [],                // Add any command-line arguments here
-         "env": {
-           "MINIME_SERVER_URL": "http://localhost:8000",
-           "MINIME_DEBUG": "false"
-         }
-       }
-     }
-   }
-   ```
-
-3. **Commit this file** to your repository so all team members have the same MCP configuration
-
-4. **Install the MiniMe-MCP client** (team members need to do this):
-   ```bash
-   npm install -g @minimemcp/mcp-client
-   ```
-
-5. **Restart VS Code** to load the project-level configuration
-
-**Benefits of project-level configuration:**
-- ✅ Consistent configuration across the team
-- ✅ No need to modify global VS Code settings
-- ✅ Configuration is version-controlled
-- ✅ Works alongside global configurations
-
-## Configuration Options
-
-- `MINIME_SERVER_URL`: URL of your MiniMe-MCP server (default: http://localhost:8000)
-- `MINIME_DEBUG`: Enable debug logging (true/false)
-
-## Verification
-
-In VS Code with GitHub Copilot, you should see MiniMe-MCP tools available in Copilot Chat. Test with:
-- "Use the store_memory tool to save this information"
-- "Search my memories using the search_memories tool"
-- "Get insights about my projects"
-
-## Available Tools
-
-Once configured, you'll have access to all MiniMe-MCP tools through GitHub Copilot:
-- **store_memory** - Store information with auto-tagging
-- **search_memories** - Semantic search across memories
-- **get_insights** - AI-powered insights and patterns
-- **start_thinking** - Sequential reasoning process
-- **manage_tasks** - Task management
-- **manage_project** - Project documentation
-- **And more!**
-
-## Troubleshooting
-
-If MCP tools don't appear in Copilot Chat:
-1. **Ensure GitHub Copilot extension is installed and active**
-2. Check if minime-mcp is installed: `which minime-mcp`
-3. Verify server is running: `curl http://localhost:8000/health`
-4. Check VS Code logs for Copilot-related errors
-5. Restart VS Code completely after adding the configuration
-6. Try the auto-discovery method if using direct configuration fails
+Use the same format as the global configuration above.
 
 ## Important Notes
 
-- **MCP support is through GitHub Copilot**, not VS Code itself
-- **Auto-discovery from Cursor's config** is a convenient Copilot feature
-- **Both methods provide the same MCP tool functionality** through Copilot Chat
-- **You need an active GitHub Copilot subscription** for this to work
+- The configuration uses `npx -y` to automatically install and run minime-mcp
+- MCP servers are configured in `mcp.json`, NOT in `settings.json`
+- The format uses `mcpServers` (not `servers` or `chat.mcp.servers`)
+- Global configuration applies to all workspaces
+- No manual npx commands needed - VS Code starts the MCP server automatically
+- **Organization Users**: Ensure your GitHub organization administrator has enabled MCP in Copilot policies
+
+## Verification
+
+1. **Check MiniMe-MCP server is running:**
+   ```bash
+   curl http://localhost:8000/health
+   ```
+
+2. **Restart VS Code** after configuration
+
+3. **Test in VS Code:**
+   - Open GitHub Copilot Chat (click the chat icon in sidebar)
+   - Type a message like "Use MCP tools to search my memories"
+   - You should see MiniMe tools being used
+
+## Available Tools
+
+Once configured, these MiniMe-MCP tools are available in Copilot Chat:
+- `store_memory` - Store project knowledge
+- `search_memories` - Search stored information
+- `get_insights` - Get AI-powered insights
+- `manage_tasks` - Manage project tasks
+- `start_thinking` - Sequential reasoning
+- `manage_project` - Project documentation
+
+## Troubleshooting
+
+1. **MCP not available**:
+   - Verify VS Code version is 1.102+ (or Insiders 1.103+)
+   - Check GitHub Copilot Chat extension is v0.29+
+   - For organization users: Contact your GitHub admin to enable MCP in Copilot policies
+
+2. **Tools not appearing**: 
+   - Ensure configuration is in `mcp.json`, not `settings.json`
+   - Use `mcpServers` key, not `servers`
+   - Restart VS Code completely after configuration
+
+3. **Connection errors**:
+   - Verify MiniMe server is running: `docker ps -f name=minimemcp`
+   - Check server health: `curl http://localhost:8000/health`
+   - Enable debug mode: Set `"MINIME_DEBUG": "true"`

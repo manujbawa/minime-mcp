@@ -20,6 +20,7 @@ const TasksPage = lazy(() => import('./features/tasks/pages/TasksPage').then(m =
 const ConfigPage = lazy(() => import('./features/config/pages/ConfigPage').then(m => ({ default: m.ConfigPage })));
 const MCPToolsPage = lazy(() => import('./features/mcp-tools/pages/MCPToolsPage').then(m => ({ default: m.MCPToolsPage })));
 const PromptManagementPage = lazy(() => import('./features/prompts/pages/PromptManagementPage').then(m => ({ default: m.PromptManagementPage })));
+const LogsPage = lazy(() => import('./features/logs/pages/LogsPage').then(m => ({ default: m.LogsPage })));
 
 // Loading component
 const PageLoader = () => (
@@ -143,6 +144,14 @@ function App() {
                 element={
                   <Suspense fallback={<PageLoader />}>
                     <MCPToolsPage />
+                  </Suspense>
+                }
+              />
+              <Route
+                path="logs"
+                element={
+                  <Suspense fallback={<PageLoader />}>
+                    <LogsPage />
                   </Suspense>
                 }
               />

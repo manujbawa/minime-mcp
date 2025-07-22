@@ -24,8 +24,10 @@ import {
   AdminPanelSettings,
   Code,
   ChevronLeft,
+  Terminal,
 } from '@mui/icons-material';
 import { DRAWER_WIDTH } from './styles';
+import { APP_VERSION } from '../../config/version';
 
 interface NavItem {
   title: string;
@@ -42,6 +44,7 @@ const navItems: NavItem[] = [
   { title: 'Analytics', path: '/analytics', icon: <Analytics /> },
   { title: 'MCP Tools', path: '/mcp-tools', icon: <Build /> },
   { title: 'Meta-Learning', path: '/meta-learning', icon: <School /> },
+  { title: 'Logs', path: '/logs', icon: <Terminal /> },
 ];
 
 interface SidebarProps {
@@ -89,7 +92,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ open, onToggle }) => {
               MiniMe MCP
             </Typography>
             <Typography variant="caption" color="text.secondary">
-              v0.2.0
+              v{APP_VERSION}
             </Typography>
           </Box>
         </Box>

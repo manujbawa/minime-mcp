@@ -36,11 +36,13 @@ COPY --chown=${USER_ID}:${GROUP_ID} src/ ./src/
 
 # Copy database initialization files
 RUN mkdir -p ./database
-# Copy the three SQL files - they will be executed in order by the entrypoint
+# Copy the SQL files - they will be executed in order by the entrypoint
 COPY --chown=${USER_ID}:${GROUP_ID} build/sql-bootstrap/MINIME_TABLES_CREATE_01.sql ./database/
 COPY --chown=${USER_ID}:${GROUP_ID} build/sql-bootstrap/MINIME_DATA_INSERT_02.sql ./database/
 COPY --chown=${USER_ID}:${GROUP_ID} build/sql-bootstrap/MINIME_INSIGHT_TEMPLATES_INSERT_03.sql ./database/
 COPY --chown=${USER_ID}:${GROUP_ID} build/sql-bootstrap/MINIME_DATA_INSERTS_COMPLETE_MARKER_04.sql ./database/
+COPY --chown=${USER_ID}:${GROUP_ID} build/sql-bootstrap/MINIME_MIGRATIONS_05.sql ./database/
+COPY --chown=${USER_ID}:${GROUP_ID} build/sql-bootstrap/MINIME_VALIDATION_1000.sql ./database/
 
 # Copy application entrypoints and startup scripts
 COPY --chown=${USER_ID}:${GROUP_ID} build/docker-entrypoint-with-local-models.sh /docker-entrypoint.sh
@@ -52,7 +54,7 @@ USER ${USER_ID}:${GROUP_ID}
 ENV MCP_PORT=8000 \
     UI_PORT=9000 \
     LOAD_SAMPLE_DATA=true \
-    USE_LOCAL_MODELS=true \
+    USE_LOCAL_MODELS=false \
     MCP_DEBUG=false \
     # V2 specific configs - enables v2 in service-initializer.js
     INSIGHTS_VERSION=v2 \

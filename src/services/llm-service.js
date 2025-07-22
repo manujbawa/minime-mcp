@@ -239,15 +239,22 @@ export class LLMService {
                 throw new Error('Invalid response from Ollama API');
             }
 
+            // Validate response for repetitive symbols
+            const responseText = data.response.trim();
+            if (this.hasRepetitiveSymbols(responseText)) {
+                this.logger.error('Response contains repetitive symbols:', responseText.substring(0, 100));
+                throw new Error('Invalid response: repetitive symbols detected');
+            }
+
             // Log the response for debugging
             this.logger.debug('Received response from Ollama:', {
-                responseLength: data.response.length,
-                responsePreview: data.response.substring(0, 200) + '...',
+                responseLength: responseText.length,
+                responsePreview: responseText.substring(0, 200) + '...',
                 tokensUsed: data.eval_count
             });
 
             return {
-                content: data.response.trim(),
+                content: responseText,
                 model: options.model || defaultModel,
                 tokens: data.eval_count || 0,
                 totalDuration: data.total_duration || 0,
@@ -381,6 +388,16 @@ Be specific about correlation strength and provide evidence for your conclusions
         return `${systemPrompt}
 
 ${userPrompt}`;
+    }
+
+    /**
+     * Check if response contains repetitive symbols
+     */
+    hasRepetitiveSymbols(text) {
+        // Check for 5 or more consecutive repetitions of @, #, *, or other symbols
+        return /[@#*\-=~]{5,}/.test(text) || 
+               // Check for repeated patterns like "@@@@" or "####"
+               /(.)\1{9,}/.test(text);
     }
 
     /**

@@ -590,7 +590,7 @@ export class MCPResourcesService {
                 timestamp: new Date().toISOString(),
                 server: {
                     name: 'MiniMe-MCP',
-                    version: "0.2.0",
+                    version: "0.2.4",
                     capabilities: ['tools', 'resources', 'prompts', 'roots'],
                     intelligence_framework: true
                 },

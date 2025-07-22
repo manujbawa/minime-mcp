@@ -26,6 +26,7 @@ import ProjectManagementService from './project-management-service.js';
 import TaskManagementService from './task-management-service.js';
 import ReasoningService from './reasoning-service.js';
 import { initializeUnifiedInsightsV2 } from './insights-v2/unified-insights-v2-integration.js';
+import ConfigThresholdsService from './config-thresholds.js';
 
 /**
  * Initialize all services in the correct order with proper dependencies
@@ -182,13 +183,19 @@ export async function initializeServices(logger) {
             mcpToolsService.services.unifiedInsights = unifiedInsightsV2;
         }
         
+        // Initialize ConfigThresholdsService
+        const configThresholdsService = new ConfigThresholdsService(logger, configService);
+        await configThresholdsService.initialize();
+        serviceRegistry.register('configThresholds', configThresholdsService);
+        
         // Initialize V2 Async Processor for batch jobs
         const { V2AsyncProcessor } = await import('./insights-v2/queue/v2-async-processor.js');
         const v2AsyncProcessor = new V2AsyncProcessor({
             db: databaseService,
             logger: logger,
             unifiedInsightsV2: unifiedInsightsV2,
-            processorFactory: unifiedInsightsV2.processorFactory
+            processorFactory: unifiedInsightsV2.processorFactory,
+            configThresholds: configThresholdsService
         });
         serviceRegistry.register('v2AsyncProcessor', v2AsyncProcessor);
         

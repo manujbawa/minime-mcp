@@ -5,6 +5,9 @@
 # Copy the base stage from Dockerfile.base to ensure we use the cached build
 FROM debian:12-slim AS base
 
+# Version argument (passed from Makefile)
+ARG VERSION=0.0.0-dev
+
 # Set up non-root user with numeric ID
 ARG USER_ID=1001
 ARG GROUP_ID=1001
@@ -131,7 +134,7 @@ ENV NODE_ENV=production \
     POSTGRES_USER=minime \
     POSTGRES_DB=minime_memories \
     PATH="/usr/lib/postgresql/15/bin:$PATH" \
-    USE_LOCAL_MODELS=true \
+    USE_LOCAL_MODELS=false \
     INSIGHTS_VERSION=v2 \
     ENABLE_UNIFIED_INSIGHTS=true
 
@@ -139,7 +142,7 @@ ENV NODE_ENV=production \
 LABEL security.scan="enabled" \
       security.updates="2025-06-19" \
       maintainer="MiniMe Team" \
-      version="0.2.0" \
+      version="${VERSION}" \
       description="MiniMe MCP Server with Unified Insights v2" \
       features="unified-patterns,llm-categorization,smart-enrichment" \
       vendor.optimization="true" \

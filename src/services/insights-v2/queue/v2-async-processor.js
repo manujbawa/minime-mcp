@@ -415,8 +415,20 @@ export class V2AsyncProcessor {
         this.logger.info(`[V2AsyncProcessor] Starting clustering for ${memories.length} memories`);
         const clusters = [];
         const clustered = new Set();
-        const minClusterSize = 2; // Lowered from 3 to allow smaller clusters
-        const similarityThreshold = 0.6; // Lowered from 0.8 for more lenient matching
+        
+        // Get configurable thresholds
+        const thresholds = this.dependencies.configThresholds || {
+            get: (path) => {
+                const defaults = {
+                    'clustering.minClusterSize': 2,
+                    'clustering.hybridThreshold': 0.5
+                };
+                return defaults[path];
+            }
+        };
+        
+        const minClusterSize = thresholds.get('clustering.minClusterSize');
+        const similarityThreshold = thresholds.get('clustering.hybridThreshold');
         
         // Group by memory type first for efficiency
         const typeGroups = memories.reduce((groups, memory) => {
@@ -477,28 +489,101 @@ export class V2AsyncProcessor {
     }
 
     /**
-     * Check if two memories are similar
+     * Calculate cosine similarity between two embedding vectors
+     */
+    cosineSimilarity(embedding1, embedding2) {
+        if (!embedding1 || !embedding2 || embedding1.length !== embedding2.length) {
+            return 0;
+        }
+        
+        let dotProduct = 0;
+        let norm1 = 0;
+        let norm2 = 0;
+        
+        for (let i = 0; i < embedding1.length; i++) {
+            dotProduct += embedding1[i] * embedding2[i];
+            norm1 += embedding1[i] * embedding1[i];
+            norm2 += embedding2[i] * embedding2[i];
+        }
+        
+        const denominator = Math.sqrt(norm1) * Math.sqrt(norm2);
+        return denominator === 0 ? 0 : dotProduct / denominator;
+    }
+
+    /**
+     * Calculate Jaccard similarity between two sets
+     */
+    jaccardSimilarity(set1, set2) {
+        const intersection = [...set1].filter(item => set2.has(item));
+        const union = new Set([...set1, ...set2]);
+        return union.size === 0 ? 0 : intersection.length / union.size;
+    }
+
+    /**
+     * Check if two memories are similar using hybrid approach
      */
     areMemoriesSimilar(memory1, memory2, threshold) {
-        // Check smart tag overlap
+        const thresholds = this.dependencies.configThresholds || {
+            get: (path) => {
+                // Default values if config service not available
+                const defaults = {
+                    'clustering.embeddingSimilarityThreshold': 0.65,
+                    'clustering.tagSimilarityThreshold': 0.3,
+                    'clustering.timeProximityDays': 14,
+                    'clustering.embeddingWeight': 0.7,
+                    'clustering.tagWeight': 0.2,
+                    'clustering.timeWeight': 0.1,
+                    'clustering.hybridThreshold': 0.5
+                };
+                return defaults[path];
+            }
+        };
+
+        // 1. Calculate embedding similarity (primary factor)
+        let embeddingSimilarity = 0;
+        if (memory1.embedding && memory2.embedding) {
+            embeddingSimilarity = this.cosineSimilarity(memory1.embedding, memory2.embedding);
+            
+            // If embedding similarity is high enough, consider it a match immediately
+            if (embeddingSimilarity >= thresholds.get('clustering.embeddingSimilarityThreshold')) {
+                this.logger.debug(`High embedding similarity (${embeddingSimilarity.toFixed(3)}) between memories ${memory1.id} and ${memory2.id}`);
+                return true;
+            }
+        }
+        
+        // 2. Calculate tag similarity (secondary factor)
         const tags1 = new Set(memory1.smart_tags || []);
         const tags2 = new Set(memory2.smart_tags || []);
-        const intersection = [...tags1].filter(tag => tags2.has(tag));
-        const union = new Set([...tags1, ...tags2]);
+        const tagSimilarity = this.jaccardSimilarity(tags1, tags2);
         
-        if (union.size === 0) return false;
-        
-        const tagSimilarity = intersection.length / union.size;
-        
-        // Check time proximity (within 7 days)
+        // 3. Calculate time proximity boost
         const timeDiff = Math.abs(new Date(memory1.created_at) - new Date(memory2.created_at));
         const daysDiff = timeDiff / (1000 * 60 * 60 * 24);
-        const timeProximity = daysDiff <= 7;
+        const maxDays = thresholds.get('clustering.timeProximityDays');
+        const timeProximity = daysDiff <= maxDays ? 1 - (daysDiff / maxDays) : 0;
         
-        // TODO: Add embedding similarity when performance allows
-        // const embeddingSimilarity = this.cosineSimilarity(memory1.embedding, memory2.embedding);
+        // 4. Calculate hybrid score with configurable weights
+        const embeddingWeight = thresholds.get('clustering.embeddingWeight');
+        const tagWeight = thresholds.get('clustering.tagWeight');
+        const timeWeight = thresholds.get('clustering.timeWeight');
         
-        return tagSimilarity >= threshold && timeProximity;
+        const hybridScore = (embeddingSimilarity * embeddingWeight) + 
+                          (tagSimilarity * tagWeight) + 
+                          (timeProximity * timeWeight);
+        
+        const hybridThreshold = thresholds.get('clustering.hybridThreshold');
+        const isSimilar = hybridScore >= hybridThreshold;
+        
+        if (isSimilar) {
+            this.logger.debug(`Memories ${memory1.id} and ${memory2.id} clustered:`, {
+                embeddingSim: embeddingSimilarity.toFixed(3),
+                tagSim: tagSimilarity.toFixed(3),
+                timeProx: timeProximity.toFixed(3),
+                hybridScore: hybridScore.toFixed(3)
+            });
+        }
+        
+        return isSimilar;
     }
 
     /**

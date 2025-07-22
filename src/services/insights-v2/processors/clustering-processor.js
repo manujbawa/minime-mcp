@@ -197,7 +197,21 @@ Provide a JSON response with:
                 maxTokens: 1000
             });
 
-            const analysis = JSON.parse(response.content);
+            // Check for repetitive symbols before parsing
+            if (/[@#*]{5,}/.test(response.content)) {
+                this.logger.error('LLM response contains repetitive symbols');
+                return null;
+            }
+
+            let analysis;
+            try {
+                analysis = JSON.parse(response.content);
+            } catch (parseError) {
+                this.logger.error('Failed to parse LLM response:', parseError);
+                this.logger.debug('Raw response:', response.content);
+                return null;
+            }
+            
             return analysis;
 
         } catch (error) {

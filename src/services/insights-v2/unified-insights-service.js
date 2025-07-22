@@ -516,6 +516,16 @@ export class UnifiedInsightsV2Service extends EventEmitter {
                 continue;
             }
             
+            // Check for repetitive symbols in summary or title
+            const repetitivePattern = /[@#*\-=~]{5,}|(.)\1{9,}/;
+            if ((insight.summary && repetitivePattern.test(insight.summary)) ||
+                (insight.title && repetitivePattern.test(insight.title))) {
+                this.logger.info(`[UnifiedInsightsV2] Insight rejected - contains repetitive symbols`);
+                insight.validation_status = 'rejected';
+                insight.validation_reason = 'Contains repetitive symbols (likely LLM error)';
+                continue;
+            }
+            
             // Check for duplicate signatures within this batch
             const signature = this.generateInsightSignature(insight);
             const isDuplicate = validated.some(v => 

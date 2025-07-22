@@ -57,7 +57,7 @@ export function createMCPServer(services) {
   const mcpServer = new Server(
     {
       name: 'minime-mcp-intelligence',
-      version: '0.2.0',
+      version: '0.2.4',
       instructions: INTELLIGENCE_FIRST_INSTRUCTIONS
     },
     {

@@ -192,7 +192,7 @@ export class MCPToolsV3 {
                         },
                         thought_type: {
                             type: "string",
-                            description: "Type of thought being added. Valid types: 'observation' for facts/analysis, 'hypothesis' for theories, 'question' for unknowns, 'reasoning' for logical steps, 'conclusion' to finalize (stores as decision), 'assumption' for premises, 'general' for any other type of thought. SPECIAL: Use 'alternative', 'branch', 'option', 'variant', or 'fork' to create a new thinking branch for exploring different approaches. Unknown types will automatically be mapped or default to 'general'."
+                            description: "Type of thought being added. Valid types: 'observation' for facts/analysis, 'hypothesis' for theories, 'question' for unknowns, 'reasoning' for logical steps, 'conclusion' to finalize (stores as decision), 'assumption' for premises, 'analysis' for detailed examination, 'general' for any other type of thought. SPECIAL: Use 'alternative', 'branch', 'option', 'variant', or 'fork' to create a new thinking branch for exploring different approaches. Unknown types will automatically be mapped or default to 'general'."
                         },
                         branch_name: {
                             type: "string",
@@ -392,11 +392,18 @@ export class MCPToolsV3 {
             return this.responseFormatter.error('Memory search service not available');
         }
         
+        // Map search modes from MCP interface to internal representation
+        const searchModeMap = {
+            'semantic': 'content_only',
+            'keyword': 'tags_only',
+            'hybrid': 'hybrid'
+        };
+        
         const searchResult = await this.services.memorySearchService.search(query, {
             projectName: project_name,
             memoryType: memory_type === "any" ? null : memory_type,
             recentOnly: recent_only,
-            searchMode: search_mode,
+            searchMode: searchModeMap[search_mode] || 'hybrid',
             limit: 10
         });
         
