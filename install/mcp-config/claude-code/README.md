@@ -127,13 +127,21 @@ In Claude Desktop, you should see MiniMe-MCP tools available. Test with:
    - Try the Claude Code CLI import method if manual config fails
 
 3. **Node.js PATH issues**
-   - Find your Node.js installation: `which node`
+   - Find your Node.js installation:
+     - macOS/Linux: `which node`
+     - Windows: `where node`
    - Common paths:
-     - Homebrew: `/opt/homebrew/bin` or `/opt/homebrew/opt/node/bin`
-     - nvm: `~/.nvm/versions/node/*/bin`
-     - System: `/usr/local/bin`
+     - macOS Homebrew: `/opt/homebrew/bin` or `/opt/homebrew/opt/node/bin`
+     - macOS/Linux nvm: `~/.nvm/versions/node/*/bin`
+     - macOS/Linux System: `/usr/local/bin`
+     - Windows: `C:\Program Files\nodejs` or `%APPDATA%\npm`
    - Add your specific path to the configuration
 
-4. **Permission errors**
+4. **Windows-specific issues**
+   - If `npx` is not recognized, ensure Node.js is in your PATH
+   - Try using full path: `"command": "C:\\Program Files\\nodejs\\npx.cmd"`
+   - Check Windows Defender/Antivirus isn't blocking the connection
+
+5. **Permission errors**
    - Ensure the MiniMe-MCP server is accessible at http://localhost:8000
    - Check Docker container is running: `docker ps -f name=minimemcp`
