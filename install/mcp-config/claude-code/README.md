@@ -63,7 +63,23 @@ claude mcp add-from-claude-desktop
    }
    ```
 
-   **Configuration for other systems:**
+   **Configuration for Windows:**
+   ```json
+   {
+     "mcpServers": {
+       "minime": {
+         "command": "cmd",
+         "args": ["/c", "npx", "-y", "minime-mcp"],
+         "env": {
+           "MINIME_SERVER_URL": "http://localhost:8000",
+           "MINIME_DEBUG": "true"
+         }
+       }
+     }
+   }
+   ```
+
+   **Configuration for Linux:**
    ```json
    {
      "mcpServers": {
