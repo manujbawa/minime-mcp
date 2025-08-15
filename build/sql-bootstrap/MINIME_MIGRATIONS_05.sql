@@ -335,3 +335,290 @@ BEGIN
     END IF;
     RAISE NOTICE '====================================';
 END $$;
+
+-- ============================================================================
+-- Migration 05.005: Add token_metadata column to memories table
+-- Date: 2025-01-07
+-- Description: Adds JSONB column to track token counts for content, summary, and tags
+-- Safe to run multiple times - checks if column exists before adding
+-- ============================================================================
+
+DO $$
+BEGIN
+    -- Check if token_metadata column exists
+    IF NOT EXISTS (
+        SELECT 1 
+        FROM information_schema.columns 
+        WHERE table_name = 'memories' 
+        AND column_name = 'token_metadata'
+        AND table_schema = 'public'
+    ) THEN
+        RAISE NOTICE 'Migration 05.005: Adding token_metadata column to memories table...';
+        
+        -- Add the column
+        ALTER TABLE public.memories 
+        ADD COLUMN token_metadata JSONB;
+        
+        -- Add a comment to document the column
+        COMMENT ON COLUMN public.memories.token_metadata IS 
+        'Token count breakdown: {content_tokens, summary_tokens, tags_tokens, total_tokens, calculation_method, calculated_at}';
+        
+        -- Create an index for efficient token analytics queries
+        CREATE INDEX idx_memories_token_total ON public.memories (((token_metadata->>'total_tokens')::int));
+        CREATE INDEX idx_memories_project_token ON public.memories (project_id, ((token_metadata->>'total_tokens')::int));
+        
+        RAISE NOTICE 'Migration 05.005: Successfully added token_metadata column and indexes';
+    ELSE
+        RAISE NOTICE 'Migration 05.005: token_metadata column already exists (skipping)';
+    END IF;
+END $$;
+
+-- ============================================================================
+-- Migration 05.006: Add project linking support
+-- Date: 2025-01-08
+-- Description: Adds project_links table for many-to-many relationships between projects
+-- Safe to run multiple times - checks if structures exist before creating
+-- ============================================================================
+
+DO $$
+BEGIN
+    -- Check if project_links table exists
+    IF NOT EXISTS (
+        SELECT 1 
+        FROM information_schema.tables 
+        WHERE table_name = 'project_links' 
+        AND table_schema = 'public'
+    ) THEN
+        RAISE NOTICE 'Migration 05.006: Creating project_links table...';
+        
+        -- Create project_links table
+        CREATE TABLE public.project_links (
+            id SERIAL PRIMARY KEY,
+            source_project_id INTEGER NOT NULL,
+            target_project_id INTEGER NOT NULL,
+            link_type VARCHAR(50) NOT NULL DEFAULT 'related',
+            visibility VARCHAR(20) DEFAULT 'full',
+            metadata JSONB DEFAULT '{}',
+            created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+            created_by VARCHAR(255),
+            CONSTRAINT fk_source_project FOREIGN KEY (source_project_id) 
+                REFERENCES projects(id) ON DELETE CASCADE,
+            CONSTRAINT fk_target_project FOREIGN KEY (target_project_id) 
+                REFERENCES projects(id) ON DELETE CASCADE,
+            CONSTRAINT unique_project_link UNIQUE (source_project_id, target_project_id, link_type),
+            CONSTRAINT no_self_link CHECK (source_project_id != target_project_id),
+            CONSTRAINT valid_link_type CHECK (link_type IN 
+                ('related', 'parent', 'child', 'dependency', 'fork', 'template')),
+            CONSTRAINT valid_visibility CHECK (visibility IN ('full', 'metadata_only', 'none'))
+        );
+        
+        -- Create indexes for performance
+        CREATE INDEX idx_project_links_source ON project_links(source_project_id);
+        CREATE INDEX idx_project_links_target ON project_links(target_project_id);
+        CREATE INDEX idx_project_links_type ON project_links(link_type);
+        CREATE INDEX idx_project_links_visibility ON project_links(visibility);
+        
+        -- Add comment to document the table
+        COMMENT ON TABLE public.project_links IS 
+        'Many-to-many relationships between projects with visibility control';
+        
+        RAISE NOTICE 'Migration 05.006: Successfully created project_links table and indexes';
+    ELSE
+        RAISE NOTICE 'Migration 05.006: project_links table already exists (skipping)';
+    END IF;
+    
+    -- Create or replace the bidirectional view
+    RAISE NOTICE 'Migration 05.006: Creating/updating project_relationships view...';
+    
+    CREATE OR REPLACE VIEW project_relationships AS
+    SELECT 
+        source_project_id as project_id,
+        target_project_id as related_project_id,
+        link_type,
+        visibility,
+        metadata,
+        created_at,
+        created_by,
+        'outgoing' as direction
+    FROM project_links
+    UNION ALL
+    SELECT 
+        target_project_id as project_id,
+        source_project_id as related_project_id,
+        CASE 
+            WHEN link_type = 'parent' THEN 'child'
+            WHEN link_type = 'child' THEN 'parent'
+            ELSE link_type
+        END as link_type,
+        visibility,
+        metadata,
+        created_at,
+        created_by,
+        'incoming' as direction
+    FROM project_links;
+    
+    COMMENT ON VIEW project_relationships IS 
+    'Bidirectional view of project relationships for easier querying';
+    
+    RAISE NOTICE 'Migration 05.006: Project linking support completed successfully';
+END $$;
+
+-- Create relationship detection function (outside DO block)
+CREATE OR REPLACE FUNCTION detect_project_relationships(
+    p_project_id INTEGER,
+    p_min_references INTEGER DEFAULT 3,
+    p_min_shared_tags INTEGER DEFAULT 5
+)
+RETURNS TABLE (
+    suggested_project_id INTEGER,
+    suggested_project_name VARCHAR,
+    link_type VARCHAR,
+    confidence FLOAT,
+    evidence JSONB
+) AS $$
+BEGIN
+        RETURN QUERY
+        WITH 
+        -- Cross-references: find memories that reference other project names
+        cross_refs AS (
+            SELECT 
+                p2.id as project_id,
+                p2.name as project_name,
+                COUNT(*) as ref_count,
+                array_agg(DISTINCT substring(m1.content from 
+                    position(p2.name in m1.content) for 100)) as samples
+            FROM memories m1
+            JOIN projects p2 ON p2.id != p_project_id
+            WHERE m1.project_id = p_project_id
+            AND (m1.content ILIKE '%' || p2.name || '%' OR p2.name = ANY(m1.smart_tags))
+            GROUP BY p2.id, p2.name
+            HAVING COUNT(*) >= p_min_references
+        ),
+        -- Shared tags: find projects with overlapping tags
+        shared_tags AS (
+            SELECT 
+                m2.project_id,
+                p2.name as project_name,
+                COUNT(DISTINCT tag) as shared_tag_count,
+                array_agg(DISTINCT tag ORDER BY tag) as common_tags
+            FROM (
+                SELECT unnest(smart_tags) as tag 
+                FROM memories 
+                WHERE project_id = p_project_id
+            ) t1
+            JOIN memories m2 ON t1.tag = ANY(m2.smart_tags) AND m2.project_id != p_project_id
+            JOIN projects p2 ON p2.id = m2.project_id
+            GROUP BY m2.project_id, p2.name
+            HAVING COUNT(DISTINCT tag) >= p_min_shared_tags
+        )
+        -- Combine results and calculate confidence
+        SELECT 
+            COALESCE(cr.project_id, st.project_id) as suggested_project_id,
+            COALESCE(cr.project_name, st.project_name) as suggested_project_name,
+            CASE 
+                -- Naming patterns for parent/child detection
+                WHEN cr.project_name LIKE (SELECT name FROM projects WHERE id = p_project_id) || '-%' THEN 'child'
+                WHEN (SELECT name FROM projects WHERE id = p_project_id) LIKE cr.project_name || '-%' THEN 'parent'
+                -- High reference count suggests dependency
+                WHEN cr.ref_count > 10 THEN 'dependency'
+                -- Default to related
+                ELSE 'related'
+            END::VARCHAR as link_type,
+            -- Calculate confidence score (0-1)
+            LEAST(1.0, GREATEST(
+                COALESCE(cr.ref_count::float / 20, 0),
+                COALESCE(st.shared_tag_count::float / 20, 0)
+            )) as confidence,
+            -- Build evidence JSON
+            jsonb_build_object(
+                'references', COALESCE(cr.ref_count, 0),
+                'reference_samples', COALESCE(cr.samples, ARRAY[]::text[]),
+                'shared_tags', COALESCE(st.shared_tag_count, 0),
+                'common_tags', COALESCE(st.common_tags, ARRAY[]::text[])
+            ) as evidence
+        FROM cross_refs cr
+        FULL OUTER JOIN shared_tags st ON cr.project_id = st.project_id
+        WHERE NOT EXISTS (
+            -- Exclude already linked projects
+            SELECT 1 FROM project_links 
+            WHERE (source_project_id = p_project_id AND target_project_id = COALESCE(cr.project_id, st.project_id))
+            OR (target_project_id = p_project_id AND source_project_id = COALESCE(cr.project_id, st.project_id))
+        )
+        ORDER BY confidence DESC;
+END;
+$$ LANGUAGE plpgsql;
+
+COMMENT ON FUNCTION detect_project_relationships IS 
+'Analyzes memories to detect potential relationships between projects based on references and shared tags';
+
+-- ============================================================================
+-- FINAL VALIDATION including token_metadata and project_links
+-- ============================================================================
+
+DO $$
+DECLARE
+    thoughts_valid boolean := false;
+    search_valid boolean := false;
+    project_id_valid boolean := false;
+    insights_valid boolean := false;
+    token_metadata_valid boolean := false;
+    project_links_valid boolean := false;
+BEGIN
+    RAISE NOTICE '====================================';
+    RAISE NOTICE 'FINAL MIGRATION VALIDATION';
+    RAISE NOTICE '====================================';
+    
+    -- Validate thoughts constraint
+    thoughts_valid := EXISTS (
+        SELECT 1 FROM pg_constraint 
+        WHERE conname = 'thoughts_type_valid'
+    );
+    RAISE NOTICE 'Thoughts constraint valid: %', thoughts_valid;
+    
+    -- Validate search_analytics constraint
+    search_valid := EXISTS (
+        SELECT 1 FROM pg_constraint 
+        WHERE conname = 'search_analytics_search_mode_check'
+    );
+    RAISE NOTICE 'Search analytics constraint valid: %', search_valid;
+    
+    -- Validate project_id column in queue
+    project_id_valid := EXISTS (
+        SELECT 1 FROM information_schema.columns 
+        WHERE table_name = 'insight_processing_queue_v2' 
+        AND column_name = 'project_id'
+    );
+    RAISE NOTICE 'Project ID column valid: %', project_id_valid;
+    
+    -- Validate insights constraint  
+    insights_valid := EXISTS (
+        SELECT 1 FROM pg_constraint 
+        WHERE conname = 'unified_insights_v2_insight_type_check'
+    );
+    RAISE NOTICE 'Insights constraint valid: %', insights_valid;
+    
+    -- Validate token_metadata column
+    token_metadata_valid := EXISTS (
+        SELECT 1 FROM information_schema.columns 
+        WHERE table_name = 'memories' 
+        AND column_name = 'token_metadata'
+        AND table_schema = 'public'
+    );
+    RAISE NOTICE 'Token metadata column valid: %', token_metadata_valid;
+    
+    -- Validate project_links table
+    project_links_valid := EXISTS (
+        SELECT 1 FROM information_schema.tables 
+        WHERE table_name = 'project_links'
+        AND table_schema = 'public'
+    );
+    RAISE NOTICE 'Project links table valid: %', project_links_valid;
+    
+    IF thoughts_valid AND search_valid AND project_id_valid AND insights_valid AND token_metadata_valid AND project_links_valid THEN
+        RAISE NOTICE '✅ ALL MIGRATIONS VALIDATED SUCCESSFULLY';
+    ELSE
+        RAISE NOTICE '⚠️  SOME MIGRATIONS NEED TO BE APPLIED';
+        RAISE NOTICE 'Run this migration file again to fix any issues.';
+    END IF;
+    RAISE NOTICE '====================================';
+END $$;

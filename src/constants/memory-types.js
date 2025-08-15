@@ -3,34 +3,29 @@
  * Enhanced to support Memory Bank structure while preserving existing types
  */
 
-// Existing memory types (preserve these)
-export const LEGACY_MEMORY_TYPES = {
-    CODE: 'code',
-    DECISION: 'decision', 
-    INSIGHT: 'insight',
-    GENERAL: 'general',
+// Process/Journey memory types (for working memories)
+export const WORKING_MEMORY_TYPES = {
+    WORKING_NOTES: 'working-notes',
+    DECISION: 'decision',
+    RULE: 'rule',
+    CODE_SNIPPET: 'code-snippet',
+    LEARNING: 'learning',
+    RESEARCH: 'research',
+    DISCUSSION: 'discussion',
     PROGRESS: 'progress',
-    SUMMARY: 'summary',
-    RELEASE_VERSION: 'release_version',
-    PRD: 'prd',
-    BUG: 'bug'
+    TASK: 'task',
+    DEBUG: 'debug'
 };
 
-// New Memory Bank-aligned types
+// Project document types (formal deliverables)
 export const MEMORY_BANK_TYPES = {
     PROJECT_BRIEF: 'project_brief',
     PRODUCT_CONTEXT: 'product_context', 
     ACTIVE_CONTEXT: 'active_context',
     SYSTEM_PATTERNS: 'system_patterns',
-    TECH_CONTEXT: 'tech_context',
-    TECH_REFERENCE: 'tech_reference', // Alias for tech_context
-    ARCHITECTURE: 'architecture',
-    REQUIREMENTS: 'requirements',
     DESIGN_DECISIONS: 'design_decisions',
     IMPLEMENTATION_NOTES: 'implementation_notes',
     LESSONS_LEARNED: 'lessons_learned',
-    TASK: 'task',
-    RULE: 'rule',
     REASONING: 'reasoning',
     PROJECT_BRIEF_DOC: 'project_brief',
     PROJECT_PRD: 'project_prd',
@@ -39,7 +34,7 @@ export const MEMORY_BANK_TYPES = {
 
 // All memory types combined
 export const ALL_MEMORY_TYPES = {
-    ...LEGACY_MEMORY_TYPES,
+    ...WORKING_MEMORY_TYPES,
     ...MEMORY_BANK_TYPES
 };
 
@@ -48,60 +43,68 @@ export const MEMORY_TYPES = Object.values(ALL_MEMORY_TYPES);
 
 // Memory type metadata for UI and validation
 export const MEMORY_TYPE_METADATA = {
-    // Legacy types
-    [LEGACY_MEMORY_TYPES.CODE]: {
-        label: 'Code',
-        description: 'Code-related memories and snippets',
-        color: 'primary',
-        category: 'development'
+    // Working memory types
+    [WORKING_MEMORY_TYPES.WORKING_NOTES]: {
+        label: 'Working Notes',
+        description: 'General notes and thoughts during work',
+        color: 'default',
+        category: 'general'
     },
-    [LEGACY_MEMORY_TYPES.DECISION]: {
+    [WORKING_MEMORY_TYPES.DECISION]: {
         label: 'Decision', 
         description: 'Decisions made during development',
         color: 'info',
         category: 'planning'
     },
-    [LEGACY_MEMORY_TYPES.INSIGHT]: {
-        label: 'Insight',
+    [WORKING_MEMORY_TYPES.RULE]: {
+        label: 'Rule',
+        description: 'Project-specific constraints and preferences that AI agents should always follow',
+        color: 'error',
+        category: 'planning',
+        importance: 0.9
+    },
+    [WORKING_MEMORY_TYPES.CODE_SNIPPET]: {
+        label: 'Code Snippet',
+        description: 'Code examples and snippets',
+        color: 'primary',
+        category: 'development'
+    },
+    [WORKING_MEMORY_TYPES.LEARNING]: {
+        label: 'Learning',
         description: 'Insights and discoveries',
         color: 'secondary', 
         category: 'learning'
     },
-    [LEGACY_MEMORY_TYPES.GENERAL]: {
-        label: 'General',
-        description: 'General purpose memories',
+    [WORKING_MEMORY_TYPES.RESEARCH]: {
+        label: 'Research',
+        description: 'Information gathered during investigation',
+        color: 'info',
+        category: 'learning'
+    },
+    [WORKING_MEMORY_TYPES.DISCUSSION]: {
+        label: 'Discussion',
+        description: 'Conversations and meeting notes',
         color: 'default',
         category: 'general'
     },
-    [LEGACY_MEMORY_TYPES.PROGRESS]: {
+    [WORKING_MEMORY_TYPES.PROGRESS]: {
         label: 'Progress',
         description: 'Progress tracking and status updates',
         color: 'success',
         category: 'tracking'
     },
-    [LEGACY_MEMORY_TYPES.SUMMARY]: {
-        label: 'Summary',
-        description: 'Summaries and overviews',
-        color: 'info',
-        category: 'documentation'
-    },
-    [LEGACY_MEMORY_TYPES.RELEASE_VERSION]: {
-        label: 'Release Version',
-        description: 'Release and version information',
+    [WORKING_MEMORY_TYPES.TASK]: {
+        label: 'Task',
+        description: 'Project tasks and action items',
         color: 'warning',
-        category: 'releases'
+        category: 'planning',
+        importance: 0.7
     },
-    [LEGACY_MEMORY_TYPES.PRD]: {
-        label: 'PRD',
-        description: 'Product requirement documents',
-        color: 'primary',
-        category: 'documentation'
-    },
-    [LEGACY_MEMORY_TYPES.BUG]: {
-        label: 'Bug',
-        description: 'Bug reports and fixes',
+    [WORKING_MEMORY_TYPES.DEBUG]: {
+        label: 'Debug',
+        description: 'Debugging sessions and error logs',
         color: 'error',
-        category: 'issues'
+        category: 'development'
     },
 
     // Memory Bank types
@@ -133,34 +136,6 @@ export const MEMORY_TYPE_METADATA = {
         category: 'architecture',
         importance: 0.8
     },
-    [MEMORY_BANK_TYPES.TECH_CONTEXT]: {
-        label: 'Tech Context',
-        description: 'Technologies, setup, constraints, dependencies',
-        color: 'primary',
-        category: 'technical',
-        importance: 0.7
-    },
-    [MEMORY_BANK_TYPES.TECH_REFERENCE]: {
-        label: 'Tech Reference',
-        description: 'Technical reference documentation and API details',
-        color: 'primary',
-        category: 'technical',
-        importance: 0.7
-    },
-    [MEMORY_BANK_TYPES.ARCHITECTURE]: {
-        label: 'Architecture',
-        description: 'System architecture and design decisions',
-        color: 'info',
-        category: 'architecture',
-        importance: 0.8
-    },
-    [MEMORY_BANK_TYPES.REQUIREMENTS]: {
-        label: 'Requirements',
-        description: 'Functional and non-functional requirements',
-        color: 'primary',
-        category: 'planning',
-        importance: 0.8
-    },
     [MEMORY_BANK_TYPES.DESIGN_DECISIONS]: {
         label: 'Design Decisions',
         description: 'Key design decisions and their rationale',
@@ -181,20 +156,6 @@ export const MEMORY_TYPE_METADATA = {
         color: 'success',
         category: 'learning',
         importance: 0.7
-    },
-    [MEMORY_BANK_TYPES.TASK]: {
-        label: 'Task',
-        description: 'Project tasks and action items',
-        color: 'warning',
-        category: 'planning',
-        importance: 0.7
-    },
-    [MEMORY_BANK_TYPES.RULE]: {
-        label: 'Rule',
-        description: 'Project-specific constraints and preferences that AI agents should always follow',
-        color: 'error',
-        category: 'planning',
-        importance: 0.9
     },
     [MEMORY_BANK_TYPES.REASONING]: {
         label: 'Reasoning',

@@ -25,6 +25,7 @@ import {
   DistributionsTab,
   PerformanceTab,
   IntelligenceTab,
+  TokenUsageTab,
 } from '../tabs';
 import type { Analytics, Project } from '../../../types';
 
@@ -248,6 +249,11 @@ export const AnalyticsPage: React.FC = () => {
             {/* Tab 4: Intelligence */}
             <TabPanel value={activeTab} index={3}>
               <IntelligenceTab analytics={analytics} />
+            </TabPanel>
+
+            {/* Tab 5: Token Usage */}
+            <TabPanel value={activeTab} index={4}>
+              <TokenUsageTab projectName={selectedProject === 'all' ? undefined : selectedProject} />
             </TabPanel>
           </AnalyticsTabs>
         </Card>

@@ -10,6 +10,7 @@ import {
   PieChart,
   Assessment,
   Insights,
+  DataUsage,
 } from '@mui/icons-material';
 
 interface AnalyticsTabsProps {
@@ -51,6 +52,7 @@ export const AnalyticsTabs: React.FC<AnalyticsTabsProps> = ({
           <Tab icon={<PieChart />} label="Distributions" />
           <Tab icon={<Assessment />} label="Performance" />
           <Tab icon={<Insights />} label="Intelligence" />
+          <Tab icon={<DataUsage />} label="Token Usage" />
         </Tabs>
       </Box>
       {children}

@@ -18,7 +18,8 @@ import {
   TasksTab,
   MemoriesTab,
   ThinkingTab,
-  TimelineTab
+  TimelineTab,
+  ProjectLinksTab
 } from '../components';
 
 export const ProjectDetailsPage: React.FC = () => {
@@ -334,7 +335,8 @@ export const ProjectDetailsPage: React.FC = () => {
     memories: memories.length,
     completedTasks: tasks.filter(t => t.status === 'completed').length,
     progressEntries: progress.length,
-    thinkingSequences: thinking.length
+    thinkingSequences: thinking.length,
+    totalTokens: memories.reduce((sum, m) => sum + (m.token_metadata?.total_tokens || 0), 0)
   };
 
   return (
@@ -403,6 +405,13 @@ export const ProjectDetailsPage: React.FC = () => {
               thinking={thinking}
               briefs={briefs}
               onViewContent={openContentModal}
+            />
+          </TabPanel>
+
+          <TabPanel value={tabValue} index={6}>
+            <ProjectLinksTab 
+              projectName={projectName || ''}
+              projectId={project.id}
             />
           </TabPanel>
         </Box>

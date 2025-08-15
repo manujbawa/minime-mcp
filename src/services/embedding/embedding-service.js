@@ -5,11 +5,13 @@
 
 import fetch from 'node-fetch';
 import crypto from 'crypto';
+import TokenUtils from '../../utils/token-utils.js';
 
 export class EmbeddingService {
     constructor(logger, databaseService) {
         this.logger = logger;
         this.db = databaseService;
+        this.tokenUtils = new TokenUtils();
         this.cache = new Map(); // Simple in-memory cache
         this.maxCacheSize = 1000;
         this.tagClassifier = null; // Will be set via setTagClassifier
@@ -555,6 +557,13 @@ export class EmbeddingService {
                         }
                     }
 
+                    // Calculate token metadata with new summary and tags
+                    const tokenMetadata = this.tokenUtils.calculateTokenMetadata(
+                        memory.content,
+                        enrichment.summary,
+                        enrichment.tags
+                    );
+
                     // Update memory with enrichment including tag embedding
                     await this.db.query(`
                         UPDATE memories
@@ -563,6 +572,7 @@ export class EmbeddingService {
                             tag_embedding = $3,
                             smart_tags = $4,
                             summary = $5,
+                            token_metadata = $6,
                             processing_status = 'ready',
                             processed_at = NOW(),
                             retry_count = 0
@@ -572,7 +582,8 @@ export class EmbeddingService {
                         JSON.stringify(enrichment.embedding),
                         tagEmbedding ? JSON.stringify(tagEmbedding) : null,
                         enrichment.tags,
-                        enrichment.summary
+                        enrichment.summary,
+                        JSON.stringify(tokenMetadata)
                     ]);
 
                     this.logger.debug(`Memory ${memory.id} enriched successfully`);

@@ -131,6 +131,40 @@ EOF
             log "No migration file found, skipping migrations"
         fi
         
+        # Apply any hotfix migrations (MINIME_HOTFIX_*.sql)
+        for hotfix in /app/database/MINIME_HOTFIX_*.sql; do
+            if [ -f "$hotfix" ]; then
+                HOTFIX_NAME=$(basename "$hotfix")
+                log "Applying hotfix: $HOTFIX_NAME"
+                
+                # Check if hotfix was already applied by looking for a marker in the database
+                HOTFIX_MARKER="${HOTFIX_NAME%.sql}_APPLIED"
+                ALREADY_APPLIED=$(/usr/lib/postgresql/15/bin/psql -U "$POSTGRES_USER" -d "$POSTGRES_DB" -tAc "SELECT 1 FROM pg_tables WHERE tablename = 'hotfix_history' LIMIT 1;" 2>/dev/null)
+                
+                if [ "$ALREADY_APPLIED" = "1" ]; then
+                    # Check if this specific hotfix was applied
+                    HOTFIX_APPLIED=$(/usr/lib/postgresql/15/bin/psql -U "$POSTGRES_USER" -d "$POSTGRES_DB" -tAc "SELECT 1 FROM hotfix_history WHERE hotfix_name = '$HOTFIX_NAME' LIMIT 1;" 2>/dev/null)
+                    
+                    if [ "$HOTFIX_APPLIED" = "1" ]; then
+                        log "  Hotfix $HOTFIX_NAME already applied, skipping"
+                        continue
+                    fi
+                else
+                    # Create hotfix history table if it doesn't exist
+                    /usr/lib/postgresql/15/bin/psql -U "$POSTGRES_USER" -d "$POSTGRES_DB" -c "CREATE TABLE IF NOT EXISTS hotfix_history (hotfix_name VARCHAR(255) PRIMARY KEY, applied_at TIMESTAMP DEFAULT NOW());" >/dev/null 2>&1
+                fi
+                
+                # Apply the hotfix
+                if /usr/lib/postgresql/15/bin/psql -U "$POSTGRES_USER" -d "$POSTGRES_DB" -f "$hotfix" >/dev/null 2>&1; then
+                    log "  ✅ Hotfix $HOTFIX_NAME applied successfully"
+                    # Record that this hotfix was applied
+                    /usr/lib/postgresql/15/bin/psql -U "$POSTGRES_USER" -d "$POSTGRES_DB" -c "INSERT INTO hotfix_history (hotfix_name) VALUES ('$HOTFIX_NAME') ON CONFLICT DO NOTHING;" >/dev/null 2>&1
+                else
+                    warn "  ⚠️ Hotfix $HOTFIX_NAME had issues (may already be applied)"
+                fi
+            fi
+        done
+        
         # Run validation script
         if [ -f /app/database/MINIME_VALIDATION_1000.sql ]; then
             log "Running database validation..."

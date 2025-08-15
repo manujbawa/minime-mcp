@@ -69,11 +69,13 @@ export interface Project {
   session_count?: string;
   thinking_sequence_count?: string;
   last_activity?: string;
+  link_count?: number;
   stats?: {
     memory_count: number;
     session_count: number;
     thinking_sequences: number;
     last_activity: string;
+    link_count?: number;
   };
 }
 
@@ -100,6 +102,14 @@ export interface Memory {
   summary?: string;
   processing_status?: 'pending' | 'processing' | 'ready' | 'failed' | 'failed_permanent';
   metadata: Record<string, any>;
+  token_metadata?: {
+    content_tokens: number;
+    summary_tokens: number;
+    tags_tokens: number;
+    total_tokens: number;
+    calculation_method: string;
+    calculated_at: string;
+  };
   created_at: string;
   updated_at: string;
   similarity?: number;
@@ -275,6 +285,42 @@ export interface TaskItem {
 
 // Task type alias for API compatibility
 export type Task = TaskItem;
+
+// Project Link Types
+export interface ProjectLink {
+  id: number;
+  source_project_id: number;
+  source_project_name: string;
+  target_project_id: number;
+  target_project_name: string;
+  link_type: 'related' | 'parent' | 'child' | 'dependency' | 'fork' | 'template';
+  visibility: 'full' | 'metadata_only' | 'none';
+  metadata?: Record<string, any>;
+  created_at: string;
+  created_by?: string;
+  // Additional fields from joined queries
+  target_project?: {
+    id: number;
+    name: string;
+    description?: string;
+    memory_count?: number;
+    last_activity?: string;
+  };
+}
+
+export interface ProjectLinkSuggestion {
+  project_id: number;
+  project_name: string;
+  suggested_link_type: string;
+  confidence: number;
+  reason: string;
+  evidence: {
+    reference_count?: number;
+    reference_samples?: string[];
+    shared_tags?: number;
+    common_tags?: string[];
+  };
+}
 
 // Timeline Activity Types
 export interface TimelineActivity {

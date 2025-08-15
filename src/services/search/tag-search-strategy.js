@@ -25,38 +25,97 @@ export class TagSearchStrategy {
             dateFrom = null,
             threshold = 0.7,
             limit = 10,
-            includeEmbeddings = false
+            includeEmbeddings = false,
+            includeLinkedProjects = false,
+            linkedProjectDepth = 2
         } = options;
 
         try {
             // Build SQL query for tag-only search
-            let sql = `
-                SELECT 
-                    m.id, m.project_id, m.session_id, m.content, m.memory_type,
-                    m.summary, m.processing_status, m.importance_score, m.smart_tags, m.metadata,
-                    m.embedding_model, m.embedding_dimensions, m.created_at, m.updated_at,
-                    p.name as project_name,
-                    s.session_name,
-                    (1 - (m.tag_embedding <=> $1::vector)) as tag_similarity,
-                    'tags_only' as search_mode
-                    ${includeEmbeddings ? ', m.tag_embedding' : ''}
-                FROM memories m
-                JOIN projects p ON m.project_id = p.id
-                LEFT JOIN sessions s ON m.session_id = s.id
-                WHERE m.tag_embedding IS NOT NULL
-                AND m.processing_status NOT IN ('failed', 'failed_permanent')
-            `;
+            let sql;
+            
+            if (includeLinkedProjects && projectId) {
+                // Use CTE to get linked projects
+                sql = `
+                    WITH RECURSIVE linked_projects AS (
+                        -- Start with the source project
+                        SELECT id, 0 as depth
+                        FROM projects
+                        WHERE id = $2
+                        
+                        UNION
+                        
+                        -- Recursively find linked projects
+                        SELECT 
+                            CASE 
+                                WHEN pr.project_id = lp.id THEN pr.related_project_id
+                                ELSE pr.project_id
+                            END as id,
+                            lp.depth + 1 as depth
+                        FROM project_relationships pr
+                        JOIN linked_projects lp ON 
+                            (pr.project_id = lp.id OR pr.related_project_id = lp.id)
+                        WHERE lp.depth < $3
+                        AND pr.visibility IN ('full', 'metadata_only')
+                    )
+                    SELECT 
+                        m.id, m.project_id, m.session_id, m.content, m.memory_type,
+                        m.summary, m.processing_status, m.importance_score, m.smart_tags, m.metadata,
+                        m.embedding_model, m.embedding_dimensions, m.created_at, m.updated_at,
+                        p.name as project_name,
+                        s.session_name,
+                        (1 - (m.tag_embedding <=> $1::vector)) as tag_similarity,
+                        'tags_only' as search_mode,
+                        CASE 
+                            WHEN m.project_id = $2 THEN 'direct'
+                            ELSE 'linked'
+                        END as source_type
+                        ${includeEmbeddings ? ', m.tag_embedding' : ''}
+                    FROM memories m
+                    JOIN projects p ON m.project_id = p.id
+                    LEFT JOIN sessions s ON m.session_id = s.id
+                    WHERE m.project_id IN (SELECT DISTINCT id FROM linked_projects)
+                    AND m.tag_embedding IS NOT NULL
+                    AND m.processing_status NOT IN ('failed', 'failed_permanent')
+                `;
+            } else {
+                sql = `
+                    SELECT 
+                        m.id, m.project_id, m.session_id, m.content, m.memory_type,
+                        m.summary, m.processing_status, m.importance_score, m.smart_tags, m.metadata,
+                        m.embedding_model, m.embedding_dimensions, m.created_at, m.updated_at,
+                        p.name as project_name,
+                        s.session_name,
+                        (1 - (m.tag_embedding <=> $1::vector)) as tag_similarity,
+                        'tags_only' as search_mode
+                        ${includeEmbeddings ? ', m.tag_embedding' : ''}
+                    FROM memories m
+                    JOIN projects p ON m.project_id = p.id
+                    LEFT JOIN sessions s ON m.session_id = s.id
+                    WHERE m.tag_embedding IS NOT NULL
+                    AND m.processing_status NOT IN ('failed', 'failed_permanent')
+                `;
+            }
 
             const params = [JSON.stringify(queryEmbedding)];
             let paramCount = 1;
+            
+            // Add linked projects parameters if needed
+            if (includeLinkedProjects && projectId) {
+                params.push(projectId); // $2
+                params.push(linkedProjectDepth); // $3
+                paramCount = 3;
+            }
 
             // Apply filters
-            if (projectId) {
-                sql += ` AND m.project_id = $${++paramCount}`;
-                params.push(projectId);
-            } else if (projectName) {
-                sql += ` AND p.name = $${++paramCount}`;
-                params.push(projectName);
+            if (!includeLinkedProjects) {
+                if (projectId) {
+                    sql += ` AND m.project_id = $${++paramCount}`;
+                    params.push(projectId);
+                } else if (projectName) {
+                    sql += ` AND p.name = $${++paramCount}`;
+                    params.push(projectName);
+                }
             }
 
             if (sessionId) {
@@ -108,7 +167,8 @@ export class TagSearchStrategy {
                     content: null,
                     tags: row.tag_similarity,
                     combined: row.tag_similarity
-                }
+                },
+                ...(row.source_type && { source_type: row.source_type })
             }));
 
         } catch (error) {

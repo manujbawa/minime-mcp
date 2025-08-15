@@ -44,6 +44,10 @@ COPY --chown=${USER_ID}:${GROUP_ID} build/sql-bootstrap/MINIME_DATA_INSERTS_COMP
 COPY --chown=${USER_ID}:${GROUP_ID} build/sql-bootstrap/MINIME_MIGRATIONS_05.sql ./database/
 COPY --chown=${USER_ID}:${GROUP_ID} build/sql-bootstrap/MINIME_VALIDATION_1000.sql ./database/
 
+# Copy any hotfix SQL files (if they exist)
+# Note: This will fail if no hotfix files exist, which is okay
+COPY --chown=${USER_ID}:${GROUP_ID} build/sql-bootstrap/MINIME_HOTFIX_*.sql ./database/
+
 # Copy application entrypoints and startup scripts
 COPY --chown=${USER_ID}:${GROUP_ID} build/docker-entrypoint-with-local-models.sh /docker-entrypoint.sh
 USER root

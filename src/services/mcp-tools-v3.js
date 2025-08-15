@@ -39,7 +39,7 @@ export class MCPToolsV3 {
         return [
             {
                 name: "store_memory",
-                description: "Store project memories with auto-tagging. Use for decisions, code snippets, rules, or general notes that should be remembered across sessions. Memories are automatically categorized, tagged, and indexed for later retrieval. IDE Agents: Consider emotional context when choosing memory types - frustration often indicates a need for rules.",
+                description: "Store WORKING memories (notes, learnings, progress) with auto-tagging. Use for process/journey documentation, not formal project docs. For project briefs, PRDs, or implementation plans, use manage_project tool instead. Memories are automatically categorized, tagged, and indexed for later retrieval.",
                 annotations: {
                     title: "Store Memory",
                     readOnlyHint: false,
@@ -59,8 +59,8 @@ export class MCPToolsV3 {
                         },
                         memory_type: {
                             type: "string",
-                            enum: ["general", "decision", "rule", "code", "tech_reference", "tech_context", "architecture", "requirements", "bug", "task", "progress"],
-                            description: "Memory type (auto-detected if omitted). Use: 'general' for notes, 'decision' for choices made, 'rule' for constraints, 'code' for snippets, 'tech_reference'/'tech_context' for technical details, 'architecture' for design, 'bug' for issues, 'task' for todos, 'progress' for updates. IDE AGENTS: Use 'rule' when detecting frustration/annoyance (prevent issues), confusion (clarity rules), or stress (process rules). Look for 'always', 'never', 'must', 'should' patterns."
+                            enum: ["working-notes", "decision", "rule", "code-snippet", "learning", "research", "discussion", "progress", "task", "debug"],
+                            description: "Memory type (auto-detected if omitted). Use: 'working-notes' for general notes/thoughts, 'decision' for choices made, 'rule' for constraints/preferences, 'code-snippet' for code examples, 'learning' for insights/discoveries, 'research' for gathered information, 'discussion' for conversations/meetings, 'progress' for status updates, 'task' for action items, 'debug' for debugging sessions. For formal project docs (briefs, PRDs, plans), use manage_project tool instead."
                         },
                         importance_score: {
                             type: "number",
@@ -101,7 +101,7 @@ export class MCPToolsV3 {
                         },
                         memory_type: {
                             type: "string",
-                            enum: ["any", "general", "decision", "rule", "code", "tech_reference", "tech_context", "architecture", "requirements", "bug", "task", "progress"],
+                            enum: ["any", "working-notes", "decision", "rule", "code-snippet", "learning", "research", "discussion", "progress", "task", "debug"],
                             description: "Filter by memory type (default: 'any' searches all types). Use specific type to narrow results. Example: 'decision' to find only decision records."
                         },
                         recent_only: {
@@ -112,6 +112,14 @@ export class MCPToolsV3 {
                             type: "string",
                             enum: ["semantic", "keyword", "hybrid"],
                             description: "Search algorithm (default: 'hybrid' for best results). 'semantic' finds conceptually similar content, 'keyword' finds exact text matches, 'hybrid' combines both approaches."
+                        },
+                        include_linked_projects: {
+                            type: "boolean",
+                            description: "Include memories from linked projects (default: false). When true, searches will also return relevant memories from projects linked to the specified project."
+                        },
+                        linked_project_depth: {
+                            type: "number",
+                            description: "Maximum depth for following project links (default: 2, max: 5). Only used when include_linked_projects is true. Controls how many levels of project relationships to traverse."
                         }
                     },
                     required: ["query"]
@@ -241,7 +249,7 @@ export class MCPToolsV3 {
             },
             {
                 name: "manage_project",
-                description: "Create, update, or retrieve project documentation (briefs, PRDs, implementation plans). Manages project-level docs. Documents are versioned and stored as special memory types. Use this for formal project documentation, not general notes.",
+                description: "Create/update FORMAL project documents (briefs, PRDs, implementation plans). USE THIS FOR PROJECT BRIEFS! Manages official project documentation as deliverables. For working notes, research, or progress updates, use store_memory instead.",
                 annotations: {
                     title: "Manage Project",
                     readOnlyHint: false,
@@ -253,8 +261,8 @@ export class MCPToolsV3 {
                     properties: {
                         action: {
                             type: "string",
-                            enum: ["create", "update", "get"],
-                            description: "Action to perform. 'create' makes new document (fails if exists), 'update' modifies existing document (requires doc_id), 'get' retrieves all documents or filtered by doc_type."
+                            enum: ["create", "update", "get", "list_all", "link", "unlink", "get_links", "analyze_relationships"],
+                            description: "Action to perform. 'create' makes new document (fails if exists), 'update' modifies existing document (requires doc_id), 'get' retrieves all documents or filtered by doc_type, 'list_all' lists all projects with stats (ignores project_name), 'link' creates project relationship, 'unlink' removes relationship, 'get_links' lists all relationships, 'analyze_relationships' detects potential links."
                         },
                         project_name: {
                             type: "string",
@@ -272,6 +280,42 @@ export class MCPToolsV3 {
                         doc_id: {
                             type: "string",
                             description: "Document ID for updates (required for 'update' action). Get this from 'create' response or 'get' action. Format: numeric ID as string."
+                        },
+                        target_project_name: {
+                            type: "string",
+                            description: "Target project name for linking actions (required for 'link' action)."
+                        },
+                        link_type: {
+                            type: "string",
+                            enum: ["related", "parent", "child", "dependency", "fork", "template"],
+                            description: "Type of relationship between projects. Default: 'related'."
+                        },
+                        visibility: {
+                            type: "string", 
+                            enum: ["full", "metadata_only", "none"],
+                            description: "Visibility level for linked project memories. 'full' allows complete access, 'metadata_only' shows only metadata, 'none' hides memories. Default: 'full'."
+                        },
+                        min_references: {
+                            type: "number",
+                            description: "Minimum cross-references for relationship detection (for 'analyze_relationships' action). Default: 3."
+                        },
+                        min_shared_tags: {
+                            type: "number",
+                            description: "Minimum shared tags for relationship detection (for 'analyze_relationships' action). Default: 5."
+                        },
+                        include_stats: {
+                            type: "boolean",
+                            description: "Include memory count, link count, and last activity for each project (for 'list_all' action). Default: true."
+                        },
+                        sort_by: {
+                            type: "string",
+                            enum: ["name", "created_at", "last_activity", "memory_count"],
+                            description: "Field to sort projects by (for 'list_all' action). Default: 'last_activity'."
+                        },
+                        sort_order: {
+                            type: "string",
+                            enum: ["asc", "desc"],
+                            description: "Sort order (for 'list_all' action). Default: 'desc'."
                         }
                     },
                     required: ["action", "project_name"]
@@ -339,7 +383,7 @@ export class MCPToolsV3 {
         const { 
             content, 
             project_name, 
-            memory_type = 'general',  // Default to general
+            memory_type = 'working-notes',  // Default to working-notes
             importance_score,
             session_name = 'default',  // Default session
             tags = []
@@ -386,7 +430,15 @@ export class MCPToolsV3 {
     }
 
     async _handleSearchMemories(args) {
-        const { query, project_name, memory_type, recent_only, search_mode } = args;
+        const { 
+            query, 
+            project_name, 
+            memory_type, 
+            recent_only, 
+            search_mode,
+            include_linked_projects = false,
+            linked_project_depth = 2
+        } = args;
         
         if (!this.services.memorySearchService) {
             return this.responseFormatter.error('Memory search service not available');
@@ -404,13 +456,16 @@ export class MCPToolsV3 {
             memoryType: memory_type === "any" ? null : memory_type,
             recentOnly: recent_only,
             searchMode: searchModeMap[search_mode] || 'hybrid',
-            limit: 10
+            limit: 10,
+            includeLinkedProjects: include_linked_projects,
+            linkedProjectDepth: Math.min(linked_project_depth, 5) // Cap at 5 for safety
         });
         
         return this.responseFormatter.searchResults(
             searchResult.results, 
             query, 
-            searchResult.search_mode
+            searchResult.search_mode,
+            searchResult.link_suggestions
         );
     }
 
@@ -683,6 +738,185 @@ export class MCPToolsV3 {
                         docType: args.doc_type
                     });
                     return this.responseFormatter.projectDocsList(docs, args.project_name);
+                }
+                
+                case "link": {
+                    const { project_name, target_project_name, link_type = 'related', visibility = 'full' } = args;
+                    
+                    // Get source project
+                    const sourceProject = await this.db.getProjectByName(project_name);
+                    if (!sourceProject) {
+                        return this.responseFormatter.error(`Source project '${project_name}' not found`);
+                    }
+                    
+                    // Get target project  
+                    const targetProject = await this.db.getProjectByName(target_project_name);
+                    if (!targetProject) {
+                        return this.responseFormatter.error(`Target project '${target_project_name}' not found`);
+                    }
+                    
+                    // Create the link
+                    await this.db.createProjectLink(
+                        sourceProject.id,
+                        targetProject.id,
+                        link_type,
+                        visibility,
+                        {}, // metadata
+                        'mcp-agent' // created_by
+                    );
+                    
+                    return this.responseFormatter.success({
+                        message: `Projects linked successfully`,
+                        source_project: project_name,
+                        target_project: target_project_name,
+                        link_type,
+                        visibility
+                    });
+                }
+                
+                case "unlink": {
+                    const { project_name, target_project_name } = args;
+                    
+                    // Get source project
+                    const sourceProject = await this.db.getProjectByName(project_name);
+                    if (!sourceProject) {
+                        return this.responseFormatter.error(`Source project '${project_name}' not found`);
+                    }
+                    
+                    // Get target project
+                    const targetProject = await this.db.getProjectByName(target_project_name);
+                    if (!targetProject) {
+                        return this.responseFormatter.error(`Target project '${target_project_name}' not found`);
+                    }
+                    
+                    // Remove the link
+                    const deleted = await this.db.deleteProjectLink(sourceProject.id, targetProject.id);
+                    if (!deleted) {
+                        return this.responseFormatter.error(`No link found between '${project_name}' and '${target_project_name}'`);
+                    }
+                    
+                    return this.responseFormatter.success({
+                        message: `Projects unlinked successfully`,
+                        source_project: project_name,
+                        target_project: target_project_name
+                    });
+                }
+                
+                case "get_links": {
+                    const { project_name } = args;
+                    
+                    // Get project
+                    const project = await this.db.getProjectByName(project_name);
+                    if (!project) {
+                        return this.responseFormatter.error(`Project '${project_name}' not found`);
+                    }
+                    
+                    // Get all links
+                    const links = await this.db.getProjectLinks(project.id, true);
+                    
+                    return this.responseFormatter.success({
+                        project: project_name,
+                        links: links.map(link => ({
+                            target_project: link.target_project_name,
+                            link_type: link.link_type,
+                            visibility: link.visibility,
+                            direction: link.direction,
+                            created_at: link.created_at
+                        }))
+                    });
+                }
+                
+                case "analyze_relationships": {
+                    const { project_name, min_references = 3, min_shared_tags = 5 } = args;
+                    
+                    // Get project
+                    const project = await this.db.getProjectByName(project_name);
+                    if (!project) {
+                        return this.responseFormatter.error(`Project '${project_name}' not found`);
+                    }
+                    
+                    // Detect potential relationships
+                    const suggestions = await this.db.detectProjectRelationships(
+                        project.id,
+                        min_references,
+                        min_shared_tags
+                    );
+                    
+                    return this.responseFormatter.success({
+                        project: project_name,
+                        suggestions: suggestions.map(s => ({
+                            suggested_project: s.suggested_project_name,
+                            link_type: s.link_type,
+                            confidence: s.confidence,
+                            evidence: s.evidence
+                        }))
+                    });
+                }
+                
+                case "list_all": {
+                    const { 
+                        include_stats = true, 
+                        sort_by = 'last_activity', 
+                        sort_order = 'desc' 
+                    } = args;
+                    
+                    // Get all projects with optional stats
+                    const projects = await this.db.listProjects(include_stats);
+                    
+                    // Sort projects
+                    projects.sort((a, b) => {
+                        let compareValue = 0;
+                        
+                        switch (sort_by) {
+                            case 'name':
+                                compareValue = a.name.localeCompare(b.name);
+                                break;
+                            case 'created_at':
+                                compareValue = new Date(a.created_at) - new Date(b.created_at);
+                                break;
+                            case 'last_activity':
+                                // Handle null values - put them at the end
+                                if (!a.last_activity && !b.last_activity) compareValue = 0;
+                                else if (!a.last_activity) compareValue = 1;
+                                else if (!b.last_activity) compareValue = -1;
+                                else compareValue = new Date(a.last_activity) - new Date(b.last_activity);
+                                break;
+                            case 'memory_count':
+                                compareValue = (parseInt(a.memory_count) || 0) - (parseInt(b.memory_count) || 0);
+                                break;
+                        }
+                        
+                        return sort_order === 'desc' ? -compareValue : compareValue;
+                    });
+                    
+                    // Get link counts if stats are included
+                    if (include_stats) {
+                        for (const project of projects) {
+                            const links = await this.db.getProjectLinks(project.id, false);
+                            project.link_count = links.length;
+                        }
+                    }
+                    
+                    // Format the project list as a readable string
+                    let responseText = `# 📁 All Projects (${projects.length} total)\n\n`;
+                    responseText += `**Sorted by:** ${sort_by} (${sort_order})\n\n`;
+                    
+                    projects.forEach((p, index) => {
+                        responseText += `## ${index + 1}. ${p.name}\n`;
+                        responseText += `- **ID:** ${p.id}\n`;
+                        responseText += `- **Description:** ${p.description || 'No description'}\n`;
+                        responseText += `- **Created:** ${new Date(p.created_at).toLocaleDateString()}\n`;
+                        
+                        if (include_stats) {
+                            responseText += `- **Memories:** ${parseInt(p.memory_count) || 0}\n`;
+                            responseText += `- **Links:** ${p.link_count || 0}\n`;
+                            responseText += `- **Last Activity:** ${p.last_activity ? new Date(p.last_activity).toLocaleDateString() : 'Never'}\n`;
+                        }
+                        
+                        responseText += '\n';
+                    });
+                    
+                    return this.responseFormatter.success(responseText);
                 }
                 
                 default:

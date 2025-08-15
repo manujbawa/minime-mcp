@@ -12,6 +12,7 @@ import {
   Code as CodeIcon,
   Psychology as ThinkingIcon,
   Timeline as TimelineIcon,
+  Link as LinkIcon,
 } from '@mui/icons-material';
 
 interface ProjectTabsProps {
@@ -35,6 +36,7 @@ export const ProjectTabs: React.FC<ProjectTabsProps> = ({ value, onChange }) => 
         <Tab icon={<CodeIcon />} label="Memories" />
         <Tab icon={<ThinkingIcon />} label="Thinking" />
         <Tab icon={<TimelineIcon />} label="Timeline" />
+        <Tab icon={<LinkIcon />} label="Relationships" />
       </Tabs>
     </Paper>
   );

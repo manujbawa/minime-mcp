@@ -161,6 +161,17 @@ export const MemoryResults: React.FC<MemoryResultsProps> = ({
                       />
                     )}
                     
+                    {/* Token Count */}
+                    {memory.token_metadata?.total_tokens && (
+                      <Chip
+                        label={`${memory.token_metadata.total_tokens.toLocaleString()} tokens`}
+                        size="small"
+                        color="primary"
+                        variant="outlined"
+                        sx={{ fontWeight: 'medium' }}
+                      />
+                    )}
+                    
                     {/* Smart Tags as Chips */}
                     {memory.smart_tags && memory.smart_tags.length > 0 && (
                       <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5, flexWrap: 'wrap' }}>

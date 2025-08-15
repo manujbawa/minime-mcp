@@ -13,6 +13,7 @@ export { TasksTab } from './tabs/TasksTab';
 export { MemoriesTab } from './tabs/MemoriesTab';
 export { ThinkingTab } from './tabs/ThinkingTab';
 export { TimelineTab } from './tabs/TimelineTab';
+export { ProjectLinksTab } from './ProjectLinksTab';
 
 // Projects Page Components
 export { ProjectCard } from './ProjectCard';

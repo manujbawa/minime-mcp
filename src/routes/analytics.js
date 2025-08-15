@@ -41,4 +41,24 @@ export default function analyticsRoutes(app, services) {
     }),
     asyncHandler(controller.getDashboard)
   );
+  
+  // Get token usage analytics
+  app.get('/api/analytics/tokens',
+    validateQuery({
+      project_name: { type: 'string' },
+      memory_type: { type: 'string' },
+      limit: { type: 'number' }
+    }),
+    asyncHandler(controller.getTokenAnalytics)
+  );
+  
+  // Get memory-level token details
+  app.get('/api/analytics/tokens/memories',
+    validateQuery({
+      project_id: { type: 'number' },
+      limit: { type: 'number' },
+      offset: { type: 'number' }
+    }),
+    asyncHandler(controller.getMemoryTokenDetails)
+  );
 }

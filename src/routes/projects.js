@@ -108,4 +108,71 @@ export default function projectRoutes(app, services) {
     }),
     asyncHandler(controller.createTask)
   );
+
+  // Project linking endpoints
+  app.post('/api/projects/:projectName/links',
+    validateBody({
+      target_project_id: { type: 'number' },
+      target_project_name: { type: 'string' },
+      link_type: { 
+        type: 'string',
+        enum: ['related', 'parent', 'child', 'dependency', 'fork', 'template'],
+        default: 'related'
+      },
+      visibility: {
+        type: 'string',
+        enum: ['full', 'metadata_only', 'none'],
+        default: 'full'
+      },
+      metadata: { type: 'object' }
+    }),
+    asyncHandler(controller.linkProjects)
+  );
+
+  app.get('/api/projects/:projectName/links',
+    validateQuery({
+      include_metadata: { type: 'boolean', default: true }
+    }),
+    asyncHandler(controller.getProjectLinks)
+  );
+
+  app.put('/api/projects/:projectName/links',
+    validateBody({
+      target_project_id: { required: true, type: 'number' },
+      link_type: { 
+        type: 'string',
+        enum: ['related', 'parent', 'child', 'dependency', 'fork', 'template']
+      },
+      visibility: {
+        type: 'string',
+        enum: ['full', 'metadata_only', 'none']
+      },
+      metadata: { type: 'object' }
+    }),
+    asyncHandler(controller.updateProjectLink)
+  );
+
+  app.delete('/api/projects/:projectName/links',
+    validateQuery({
+      target_project_id: { required: true, type: 'number' }
+    }),
+    asyncHandler(controller.unlinkProjects)
+  );
+
+  app.get('/api/projects/:projectName/related-memories',
+    validateQuery({
+      ...schemas.pagination,
+      include_metadata_only: { type: 'boolean', default: false },
+      max_depth: { type: 'number', default: 2, min: 1, max: 5 }
+    }),
+    asyncHandler(controller.getRelatedMemories)
+  );
+
+  app.get('/api/projects/:projectName/relationship-hints',
+    validateQuery({
+      min_references: { type: 'number', default: 3, min: 1 },
+      min_shared_tags: { type: 'number', default: 5, min: 1 }
+    }),
+    asyncHandler(controller.detectRelationships)
+  );
 }

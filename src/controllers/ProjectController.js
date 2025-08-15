@@ -638,4 +638,254 @@ export class ProjectController extends BaseController {
     
     return result.rows[0];
   }
+
+  /**
+   * Create a link between two projects
+   */
+  linkProjects = async (req, res) => {
+    try {
+      const { projectName } = req.params;
+      const { 
+        target_project_id, 
+        target_project_name,
+        link_type = 'related', 
+        visibility = 'full',
+        metadata = {}
+      } = req.body;
+
+      // Validate source project exists
+      const sourceProject = await this.databaseService.getProjectByName(projectName);
+      if (!sourceProject) {
+        return res.status(HttpStatus.NOT_FOUND).json(
+          ResponseUtil.error('Source project not found')
+        );
+      }
+
+      // Find target project by ID or name
+      let targetProject;
+      if (target_project_id) {
+        targetProject = await this.databaseService.getProjectById(target_project_id);
+      } else if (target_project_name) {
+        targetProject = await this.databaseService.getProjectByName(target_project_name);
+      } else {
+        return res.status(HttpStatus.BAD_REQUEST).json(
+          ResponseUtil.error('Target project ID or name is required')
+        );
+      }
+
+      if (!targetProject) {
+        return res.status(HttpStatus.NOT_FOUND).json(
+          ResponseUtil.error('Target project not found')
+        );
+      }
+
+      // Create the link
+      const link = await this.databaseService.createProjectLink(
+        sourceProject.id,
+        targetProject.id,
+        link_type,
+        visibility,
+        metadata,
+        req.user?.username || 'system'
+      );
+
+      this.logAction('Project link created', {
+        sourceProjectId: sourceProject.id,
+        targetProjectId: targetProject.id,
+        linkType: link_type
+      });
+
+      res.status(HttpStatus.CREATED).json(
+        ResponseUtil.created({
+          ...link,
+          source_project: sourceProject,
+          target_project: targetProject
+        })
+      );
+    } catch (error) {
+      this.handleError(res, error, 'Failed to create project link');
+    }
+  }
+
+  /**
+   * Get all links for a project
+   */
+  getProjectLinks = async (req, res) => {
+    try {
+      const { projectName } = req.params;
+      const { include_metadata = 'true' } = req.query;
+
+      const project = await this.databaseService.getProjectByName(projectName);
+      if (!project) {
+        return res.status(HttpStatus.NOT_FOUND).json(
+          ResponseUtil.error('Project not found')
+        );
+      }
+
+      const links = await this.databaseService.getProjectLinks(
+        project.id,
+        include_metadata === 'true'
+      );
+
+      res.json(ResponseUtil.success(links));
+    } catch (error) {
+      this.handleError(res, error, 'Failed to retrieve project links');
+    }
+  }
+
+  /**
+   * Update a project link
+   */
+  updateProjectLink = async (req, res) => {
+    try {
+      const { projectName } = req.params;
+      const { target_project_id } = req.body;
+
+      if (!target_project_id) {
+        return res.status(HttpStatus.BAD_REQUEST).json(
+          ResponseUtil.error('Target project ID is required')
+        );
+      }
+
+      const sourceProject = await this.databaseService.getProjectByName(projectName);
+      if (!sourceProject) {
+        return res.status(HttpStatus.NOT_FOUND).json(
+          ResponseUtil.error('Source project not found')
+        );
+      }
+
+      const updates = {};
+      if (req.body.link_type !== undefined) updates.link_type = req.body.link_type;
+      if (req.body.visibility !== undefined) updates.visibility = req.body.visibility;
+      if (req.body.metadata !== undefined) updates.metadata = req.body.metadata;
+
+      const updatedLink = await this.databaseService.updateProjectLink(
+        sourceProject.id,
+        target_project_id,
+        updates
+      );
+
+      if (!updatedLink) {
+        return res.status(HttpStatus.NOT_FOUND).json(
+          ResponseUtil.error('Project link not found')
+        );
+      }
+
+      res.json(ResponseUtil.success(updatedLink));
+    } catch (error) {
+      this.handleError(res, error, 'Failed to update project link');
+    }
+  }
+
+  /**
+   * Delete a project link
+   */
+  unlinkProjects = async (req, res) => {
+    try {
+      const { projectName } = req.params;
+      const { target_project_id } = req.query;
+
+      if (!target_project_id) {
+        return res.status(HttpStatus.BAD_REQUEST).json(
+          ResponseUtil.error('Target project ID is required')
+        );
+      }
+
+      const sourceProject = await this.databaseService.getProjectByName(projectName);
+      if (!sourceProject) {
+        return res.status(HttpStatus.NOT_FOUND).json(
+          ResponseUtil.error('Source project not found')
+        );
+      }
+
+      const deletedLink = await this.databaseService.deleteProjectLink(
+        sourceProject.id,
+        target_project_id
+      );
+
+      if (!deletedLink) {
+        return res.status(HttpStatus.NOT_FOUND).json(
+          ResponseUtil.error('Project link not found')
+        );
+      }
+
+      this.logAction('Project link deleted', {
+        sourceProjectId,
+        targetProjectId: target_project_id
+      });
+
+      res.json(ResponseUtil.success({ message: 'Project link removed successfully' }));
+    } catch (error) {
+      this.handleError(res, error, 'Failed to delete project link');
+    }
+  }
+
+  /**
+   * Get memories from linked projects
+   */
+  getRelatedMemories = async (req, res) => {
+    try {
+      const { projectName } = req.params;
+      const { 
+        limit = 50,
+        offset = 0,
+        include_metadata_only = 'false',
+        max_depth = 2
+      } = req.query;
+
+      const project = await this.databaseService.getProjectByName(projectName);
+      if (!project) {
+        return res.status(HttpStatus.NOT_FOUND).json(
+          ResponseUtil.error('Project not found')
+        );
+      }
+
+      const memories = await this.databaseService.listMemories({
+        projectId: project.id,
+        includeLinkedProjects: true,
+        linkedProjectDepth: parseInt(max_depth),
+        limit: parseInt(limit),
+        offset: parseInt(offset)
+      });
+
+      // Filter based on visibility if needed
+      const filteredMemories = include_metadata_only === 'true' 
+        ? memories 
+        : memories.filter(m => m.visibility === 'full' || m.project_id === parseInt(projectId));
+
+      res.json(ResponseUtil.success(filteredMemories));
+    } catch (error) {
+      this.handleError(res, error, 'Failed to retrieve related memories');
+    }
+  }
+
+  /**
+   * Detect potential project relationships
+   */
+  detectRelationships = async (req, res) => {
+    try {
+      const { projectName } = req.params;
+      const { 
+        min_references = 3,
+        min_shared_tags = 5
+      } = req.query;
+
+      const project = await this.databaseService.getProjectByName(projectName);
+      if (!project) {
+        return res.status(HttpStatus.NOT_FOUND).json(
+          ResponseUtil.error('Project not found')
+        );
+      }
+
+      const suggestions = await this.databaseService.detectProjectRelationships(
+        project.id,
+        parseInt(min_references),
+        parseInt(min_shared_tags)
+      );
+
+      res.json(ResponseUtil.success(suggestions));
+    } catch (error) {
+      this.handleError(res, error, 'Failed to detect project relationships');
+    }
+  }
 }

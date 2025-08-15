@@ -27,6 +27,7 @@ import {
   TrendingUp,
   FolderOpen,
   BarChart,
+  Link,
 } from '@mui/icons-material';
 import type { Project } from '../../../types';
 
@@ -186,19 +187,38 @@ export const ProjectCard: React.FC<ProjectCardProps> = ({
           </Grid>
         </Paper>
 
-        {/* Last Activity */}
-        <Box sx={{ display: 'flex', alignItems: 'center' }}>
-          <TrendingUp 
-            sx={{ 
-              fontSize: 14, 
-              mr: 0.5,
-              color: getActivityColor(project.last_activity || project.updated_at) === 'success' ? 'success.main' :
-                     getActivityColor(project.last_activity || project.updated_at) === 'warning' ? 'warning.main' : 'text.secondary'
-            }} 
-          />
-          <Typography variant="caption" color="text.secondary" fontSize="0.7rem">
-            {formatDate(project.last_activity || project.updated_at)}
-          </Typography>
+        {/* Last Activity and Link Indicator */}
+        <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+          <Box sx={{ display: 'flex', alignItems: 'center' }}>
+            <TrendingUp 
+              sx={{ 
+                fontSize: 14, 
+                mr: 0.5,
+                color: getActivityColor(project.last_activity || project.updated_at) === 'success' ? 'success.main' :
+                       getActivityColor(project.last_activity || project.updated_at) === 'warning' ? 'warning.main' : 'text.secondary'
+              }} 
+            />
+            <Typography variant="caption" color="text.secondary" fontSize="0.7rem">
+              {formatDate(project.last_activity || project.updated_at)}
+            </Typography>
+          </Box>
+          {project.link_count && project.link_count > 0 && (
+            <Chip
+              icon={<Link sx={{ fontSize: 12 }} />}
+              label={project.link_count}
+              size="small"
+              sx={{ 
+                height: 20, 
+                fontSize: '0.7rem',
+                '& .MuiChip-icon': { 
+                  fontSize: 12,
+                  marginLeft: '4px'
+                }
+              }}
+              color="primary"
+              variant="outlined"
+            />
+          )}
         </Box>
       </CardContent>
 

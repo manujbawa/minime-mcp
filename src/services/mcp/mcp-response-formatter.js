@@ -63,7 +63,7 @@ export class MCPResponseFormatter {
     /**
      * Format search results
      */
-    searchResults(results, query, searchMode = 'semantic') {
+    searchResults(results, query, searchMode = 'semantic', linkSuggestions = null) {
         if (!results || results.length === 0) {
             return this.success(`🔍 No memories found for "${query}"`);
         }
@@ -73,8 +73,23 @@ export class MCPResponseFormatter {
         const formatted = results.map((memory, index) => 
             this.formatMemoryResult(memory, index + 1)
         ).join('\n---\n');
+        
+        // Add link suggestions if available
+        let linkSuggestionsText = '';
+        if (linkSuggestions && linkSuggestions.length > 0) {
+            linkSuggestionsText = '\n\n---\n## 🔗 Suggested Project Links\n\n';
+            linkSuggestionsText += 'Based on the search results, these projects might be related:\n\n';
+            
+            linkSuggestions.forEach(suggestion => {
+                linkSuggestionsText += `- **${suggestion.project_name}** (${suggestion.suggested_link_type})\n`;
+                linkSuggestionsText += `  - Confidence: ${Math.round(suggestion.confidence * 100)}%\n`;
+                linkSuggestionsText += `  - Reason: ${suggestion.reason}\n`;
+            });
+            
+            linkSuggestionsText += '\n💡 *Use `manage_project` with action "link" to create these relationships*';
+        }
 
-        return this.success(header + formatted);
+        return this.success(header + formatted + linkSuggestionsText);
     }
 
     /**
@@ -316,7 +331,7 @@ ${rule.content}`;
         return {
             content: [{
                 type: "text",
-                text: `✅ Task completed!\n\n**Remaining tasks:** \`manage_tasks(action: "get", project_name: "${projectName}")\``
+                text: `✅ Task #${taskId} completed!\n\n**Remaining tasks:** \`manage_tasks(action: "get", project_name: "${projectName}")\``
             }]
         };
     }
@@ -382,7 +397,7 @@ ${rule.content}`;
         return {
             content: [{
                 type: "text",
-                text: `✅ Project ${docType} updated!\n\n**View all docs:** \`manage_project(action: "get", project_name: "${projectName}")\``
+                text: `✅ Project ${docType} (ID: ${docId}) updated!\n\n**View all docs:** \`manage_project(action: "get", project_name: "${projectName}")\``
             }]
         };
     }

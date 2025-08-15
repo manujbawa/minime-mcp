@@ -5,10 +5,12 @@
 
 import pkg from 'pg';
 const { Pool } = pkg;
+import TokenUtils from '../utils/token-utils.js';
 
 export class DatabaseService {
     constructor(logger, config = {}) {
         this.logger = logger;
+        this.tokenUtils = new TokenUtils();
         this.config = {
             host: config.host || process.env.POSTGRES_HOST || 'localhost',
             port: config.port || process.env.POSTGRES_PORT || 5432,
@@ -290,6 +292,182 @@ export class DatabaseService {
     }
 
     // ============================================================================
+    // PROJECT LINKING
+    // ============================================================================
+
+    /**
+     * Create a link between two projects
+     */
+    async createProjectLink(sourceProjectId, targetProjectId, linkType = 'related', visibility = 'full', metadata = {}, createdBy = null) {
+        try {
+            const result = await this.query(`
+                INSERT INTO project_links (
+                    source_project_id, 
+                    target_project_id, 
+                    link_type, 
+                    visibility, 
+                    metadata, 
+                    created_by
+                )
+                VALUES ($1, $2, $3, $4, $5, $6)
+                RETURNING *
+            `, [sourceProjectId, targetProjectId, linkType, visibility, metadata, createdBy]);
+            
+            this.logger.info(`Created project link: ${sourceProjectId} -> ${targetProjectId} (${linkType})`);
+            return result.rows[0];
+        } catch (error) {
+            if (error.constraint === 'unique_project_link') {
+                throw new Error(`Link already exists between projects ${sourceProjectId} and ${targetProjectId} with type ${linkType}`);
+            }
+            if (error.constraint === 'no_self_link') {
+                throw new Error('Cannot link a project to itself');
+            }
+            throw error;
+        }
+    }
+
+    /**
+     * Get all links for a project
+     */
+    async getProjectLinks(projectId, includeMetadata = true) {
+        const result = await this.query(`
+            SELECT 
+                pr.*,
+                p.name as related_project_name,
+                p.description as related_project_description
+            FROM project_relationships pr
+            JOIN projects p ON p.id = pr.related_project_id
+            WHERE pr.project_id = $1
+            ORDER BY pr.created_at DESC
+        `, [projectId]);
+        
+        if (!includeMetadata) {
+            return result.rows.map(row => {
+                const { metadata, ...rest } = row;
+                return rest;
+            });
+        }
+        
+        return result.rows;
+    }
+
+    /**
+     * Get linked projects for memory queries (with depth traversal)
+     */
+    async getLinkedProjects(projectId, options = {}) {
+        const { 
+            maxDepth = 3, 
+            visibilityFilter = ['full', 'metadata_only'],
+            linkTypes = null 
+        } = options;
+
+        const linkTypeClause = linkTypes ? 
+            `AND pr.link_type = ANY($3::varchar[])` : '';
+        
+        const params = [projectId, maxDepth];
+        if (linkTypes) params.push(linkTypes);
+
+        const result = await this.query(`
+            WITH RECURSIVE related_projects AS (
+                -- Base case: the project itself
+                SELECT 
+                    id as project_id,
+                    name as project_name,
+                    0 as depth,
+                    ARRAY[id] as path,
+                    'self'::varchar as link_type,
+                    'full'::varchar as visibility
+                FROM projects 
+                WHERE id = $1
+                
+                UNION ALL
+                
+                -- Recursive case: linked projects
+                SELECT 
+                    pr.related_project_id as project_id,
+                    p.name as project_name,
+                    rp.depth + 1 as depth,
+                    rp.path || pr.related_project_id as path,
+                    pr.link_type,
+                    pr.visibility
+                FROM related_projects rp
+                JOIN project_relationships pr ON pr.project_id = rp.project_id
+                JOIN projects p ON p.id = pr.related_project_id
+                WHERE pr.visibility = ANY($2::varchar[])
+                AND NOT pr.related_project_id = ANY(rp.path) -- Prevent cycles
+                AND rp.depth < $3 -- Limit depth
+                ${linkTypeClause}
+            )
+            SELECT DISTINCT ON (project_id) *
+            FROM related_projects
+            ORDER BY project_id, depth
+        `, [projectId, visibilityFilter, ...params.slice(2)]);
+        
+        return result.rows;
+    }
+
+    /**
+     * Update a project link
+     */
+    async updateProjectLink(sourceProjectId, targetProjectId, updates) {
+        const setClauses = [];
+        const values = [];
+        let paramCount = 1;
+
+        if (updates.link_type !== undefined) {
+            setClauses.push(`link_type = $${paramCount++}`);
+            values.push(updates.link_type);
+        }
+        if (updates.visibility !== undefined) {
+            setClauses.push(`visibility = $${paramCount++}`);
+            values.push(updates.visibility);
+        }
+        if (updates.metadata !== undefined) {
+            setClauses.push(`metadata = $${paramCount++}`);
+            values.push(updates.metadata);
+        }
+
+        if (setClauses.length === 0) {
+            throw new Error('No updates provided');
+        }
+
+        values.push(sourceProjectId, targetProjectId);
+        const result = await this.query(`
+            UPDATE project_links 
+            SET ${setClauses.join(', ')}
+            WHERE source_project_id = $${paramCount} 
+            AND target_project_id = $${paramCount + 1}
+            RETURNING *
+        `, values);
+
+        return result.rows[0] || null;
+    }
+
+    /**
+     * Delete a project link
+     */
+    async deleteProjectLink(sourceProjectId, targetProjectId) {
+        const result = await this.query(`
+            DELETE FROM project_links
+            WHERE source_project_id = $1 AND target_project_id = $2
+            RETURNING *
+        `, [sourceProjectId, targetProjectId]);
+        
+        return result.rows[0] || null;
+    }
+
+    /**
+     * Detect potential project relationships based on content
+     */
+    async detectProjectRelationships(projectId, minReferences = 3, minSharedTags = 5) {
+        const result = await this.query(`
+            SELECT * FROM detect_project_relationships($1, $2, $3)
+        `, [projectId, minReferences, minSharedTags]);
+        
+        return result.rows;
+    }
+
+    // ============================================================================
     // SESSION MANAGEMENT
     // ============================================================================
 
@@ -436,19 +614,22 @@ export class DatabaseService {
             }
         }
 
+        // Calculate token metadata
+        const tokenMetadata = this.tokenUtils.calculateTokenMetadata(content, summary, tags);
+
         const result = await this.query(`
             INSERT INTO memories 
             (project_id, session_id, content, memory_type, summary, embedding, 
-             embedding_model, embedding_dimensions, importance_score, smart_tags, metadata)
-            VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
+             embedding_model, embedding_dimensions, importance_score, smart_tags, metadata, token_metadata)
+            VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)
             RETURNING id, project_id, session_id, content, memory_type, summary, 
-                      importance_score, smart_tags, metadata, created_at, updated_at
+                      importance_score, smart_tags, metadata, token_metadata, created_at, updated_at
         `, [
             projectId, sessionId, content, memoryType, summary,
             embedding || null,
             embeddingModel,
             embeddingDimensions || (embedding ? embedding.length : null),
-            importanceScore, tags, JSON.stringify(metadata)
+            importanceScore, tags, JSON.stringify(metadata), JSON.stringify(tokenMetadata)
         ]);
         
         this.logger.info(`Created memory`, { 
@@ -489,28 +670,67 @@ export class DatabaseService {
             memoryType = null,
             minSimilarity = 0.7,
             limit = 10,
-            includeEmbeddings = false
+            includeEmbeddings = false,
+            includeLinkedProjects = false,
+            linkedProjectDepth = 2
         } = options;
 
-        let query = `
-            SELECT 
-                m.id, m.project_id, m.session_id, m.content, m.memory_type,
-                m.summary, m.processing_status, m.importance_score, m.smart_tags, m.metadata,
-                m.embedding_model, m.embedding_dimensions, m.created_at, m.updated_at,
-                p.name as project_name,
-                s.session_name,
-                (1 - (m.embedding <=> $1::vector)) as similarity
-                ${includeEmbeddings ? ', m.embedding' : ''}
-            FROM memories m
-            JOIN projects p ON m.project_id = p.id
-            LEFT JOIN sessions s ON m.session_id = s.id
-            WHERE m.embedding IS NOT NULL
-        `;
-
+        let query;
         const params = [JSON.stringify(queryEmbedding)];
         let paramCount = 1;
 
-        if (projectId) {
+        if (includeLinkedProjects && projectId) {
+            // Use recursive CTE to include linked projects
+            query = `
+                WITH linked_projects AS (
+                    SELECT * FROM (
+                        ${this._getLinkedProjectsCTE()}
+                    ) lp
+                )
+                SELECT 
+                    m.id, m.project_id, m.session_id, m.content, m.memory_type,
+                    m.summary, m.processing_status, m.importance_score, m.smart_tags, m.metadata,
+                    m.embedding_model, m.embedding_dimensions, m.created_at, m.updated_at,
+                    p.name as project_name,
+                    s.session_name,
+                    (1 - (m.embedding <=> $1::vector)) as similarity,
+                    lp.depth as relationship_depth,
+                    lp.link_type as relationship_type,
+                    CASE WHEN m.project_id != $2 THEN true ELSE false END as is_linked_memory
+                    ${includeEmbeddings ? ', m.embedding' : ''}
+                FROM memories m
+                JOIN linked_projects lp ON m.project_id = lp.project_id
+                JOIN projects p ON m.project_id = p.id
+                LEFT JOIN sessions s ON m.session_id = s.id
+                WHERE m.embedding IS NOT NULL
+                AND (lp.visibility = 'full' OR (lp.visibility = 'metadata_only' AND m.project_id = $2))
+            `;
+            paramCount++;
+            params.push(projectId);
+            paramCount++;
+            params.push(linkedProjectDepth);
+        } else {
+            // Original query without linked projects
+            query = `
+                SELECT 
+                    m.id, m.project_id, m.session_id, m.content, m.memory_type,
+                    m.summary, m.processing_status, m.importance_score, m.smart_tags, m.metadata,
+                    m.embedding_model, m.embedding_dimensions, m.created_at, m.updated_at,
+                    p.name as project_name,
+                    s.session_name,
+                    (1 - (m.embedding <=> $1::vector)) as similarity,
+                    0 as relationship_depth,
+                    'self' as relationship_type,
+                    false as is_linked_memory
+                    ${includeEmbeddings ? ', m.embedding' : ''}
+                FROM memories m
+                JOIN projects p ON m.project_id = p.id
+                LEFT JOIN sessions s ON m.session_id = s.id
+                WHERE m.embedding IS NOT NULL
+            `;
+        }
+
+        if (projectId && !includeLinkedProjects) {
             paramCount++;
             query += ` AND m.project_id = $${paramCount}`;
             params.push(projectId);
@@ -550,29 +770,63 @@ export class DatabaseService {
             limit = 50,
             offset = 0,
             orderBy = 'created_at',
-            orderDirection = 'DESC'
+            orderDirection = 'DESC',
+            includeLinkedProjects = false,
+            linkedProjectDepth = 2
         } = options;
 
-        let query = `
-            SELECT 
-                m.id, m.project_id, m.session_id, m.content, m.memory_type,
-                m.summary, m.processing_status, m.importance_score, m.smart_tags, m.metadata,
-                m.embedding_model, m.embedding_dimensions, m.created_at, m.updated_at,
-                p.name as project_name,
-                s.session_name
-            FROM memories m
-            JOIN projects p ON m.project_id = p.id
-            LEFT JOIN sessions s ON m.session_id = s.id
-            WHERE 1=1
-        `;
-
+        let query;
         const params = [];
         let paramCount = 0;
 
-        if (projectId) {
+        if (includeLinkedProjects && projectId) {
+            // Include memories from linked projects
+            query = `
+                WITH linked_projects AS (
+                    ${this._getLinkedProjectsCTE()}
+                )
+                SELECT 
+                    m.id, m.project_id, m.session_id, m.content, m.memory_type,
+                    m.summary, m.processing_status, m.importance_score, m.smart_tags, m.metadata,
+                    m.embedding_model, m.embedding_dimensions, m.created_at, m.updated_at,
+                    p.name as project_name,
+                    s.session_name,
+                    lp.depth as relationship_depth,
+                    lp.link_type as relationship_type,
+                    CASE WHEN m.project_id != $1 THEN true ELSE false END as is_linked_memory
+                FROM memories m
+                JOIN linked_projects lp ON m.project_id = lp.project_id
+                JOIN projects p ON m.project_id = p.id
+                LEFT JOIN sessions s ON m.session_id = s.id
+                WHERE (lp.visibility = 'full' OR (lp.visibility = 'metadata_only' AND m.project_id = $1))
+            `;
             paramCount++;
-            query += ` AND m.project_id = $${paramCount}`;
             params.push(projectId);
+            paramCount++;
+            params.push(linkedProjectDepth);
+        } else {
+            // Original query without linked projects
+            query = `
+                SELECT 
+                    m.id, m.project_id, m.session_id, m.content, m.memory_type,
+                    m.summary, m.processing_status, m.importance_score, m.smart_tags, m.metadata,
+                    m.embedding_model, m.embedding_dimensions, m.created_at, m.updated_at,
+                    p.name as project_name,
+                    s.session_name,
+                    0 as relationship_depth,
+                    'self' as relationship_type,
+                    false as is_linked_memory
+                FROM memories m
+                JOIN projects p ON m.project_id = p.id
+                LEFT JOIN sessions s ON m.session_id = s.id
+                WHERE 1=1
+            `;
+
+            if (projectId) {
+                paramCount++;
+                query += ` AND m.project_id = $${paramCount}`;
+                params.push(projectId);
+            }
         }
 
         if (sessionId) {
@@ -620,6 +874,12 @@ export class DatabaseService {
 
         const allowedUpdates = ['content', 'memory_type', 'summary', 'importance_score', 'smart_tags', 'metadata'];
         
+        // Check if we need to recalculate tokens
+        let needsTokenUpdate = false;
+        if (updates.content || updates.summary || updates.smart_tags) {
+            needsTokenUpdate = true;
+        }
+
         for (const [key, value] of Object.entries(updates)) {
             if (allowedUpdates.includes(key)) {
                 setClauses.push(`${key} = $${paramCount++}`);
@@ -633,6 +893,20 @@ export class DatabaseService {
             }
         }
 
+        // If we need to update tokens, fetch current memory data first
+        if (needsTokenUpdate) {
+            const currentMemory = await this.getMemoryById(id);
+            if (currentMemory) {
+                const newContent = updates.content || currentMemory.content;
+                const newSummary = updates.summary !== undefined ? updates.summary : currentMemory.summary;
+                const newTags = updates.smart_tags || currentMemory.smart_tags || [];
+                
+                const tokenMetadata = this.tokenUtils.calculateTokenMetadata(newContent, newSummary, newTags);
+                setClauses.push(`token_metadata = $${paramCount++}`);
+                values.push(JSON.stringify(tokenMetadata));
+            }
+        }
+
         if (setClauses.length === 0) {
             throw new Error('No valid updates provided');
         }
@@ -643,7 +917,7 @@ export class DatabaseService {
             SET ${setClauses.join(', ')}, updated_at = NOW()
             WHERE id = $${paramCount}
             RETURNING id, project_id, session_id, content, memory_type, summary, 
-                      processing_status, importance_score, smart_tags, metadata, created_at, updated_at
+                      processing_status, importance_score, smart_tags, metadata, token_metadata, created_at, updated_at
         `, values);
 
         return result.rows[0] || null;
@@ -679,13 +953,16 @@ export class DatabaseService {
             thinking_sequence_id = null
         } = memoryData;
 
+        // Calculate token metadata for the content
+        const tokenMetadata = this.tokenUtils.calculateTokenMetadata(content, null, tags);
+
         const result = await this.query(`
             INSERT INTO memories (
                 project_id, session_id, content, memory_type, 
                 importance_score, smart_tags, metadata, processing_status,
-                memory_status, thinking_sequence_id, created_at, updated_at
+                memory_status, thinking_sequence_id, token_metadata, created_at, updated_at
             )
-            VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, NOW(), NOW())
+            VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, NOW(), NOW())
             RETURNING *
         `, [
             project_id,
@@ -697,7 +974,8 @@ export class DatabaseService {
             JSON.stringify(metadata),
             processing_status,
             memory_status,
-            thinking_sequence_id
+            thinking_sequence_id,
+            JSON.stringify(tokenMetadata)
         ]);
 
         this.logger.info(`Stored memory: ${result.rows[0].id}`, { 
@@ -1421,6 +1699,46 @@ export class DatabaseService {
         } finally {
             client.release();
         }
+    }
+
+    // ============================================================================
+    // HELPER METHODS
+    // ============================================================================
+
+    /**
+     * Generate CTE for linked projects traversal
+     * @private
+     */
+    _getLinkedProjectsCTE() {
+        return `
+            WITH RECURSIVE related_projects AS (
+                -- Base case: the project itself
+                SELECT 
+                    id as project_id,
+                    0 as depth,
+                    ARRAY[id] as path,
+                    'self'::varchar as link_type,
+                    'full'::varchar as visibility
+                FROM projects 
+                WHERE id = $2
+                
+                UNION ALL
+                
+                -- Recursive case: linked projects
+                SELECT 
+                    pr.related_project_id as project_id,
+                    rp.depth + 1 as depth,
+                    rp.path || pr.related_project_id as path,
+                    pr.link_type,
+                    pr.visibility
+                FROM related_projects rp
+                JOIN project_relationships pr ON pr.project_id = rp.project_id
+                WHERE pr.visibility != 'none'
+                AND NOT pr.related_project_id = ANY(rp.path)
+                AND rp.depth < $3
+            )
+            SELECT * FROM related_projects
+        `;
     }
 }
 

@@ -118,6 +118,181 @@ export class AnalyticsController extends BaseController {
     }
   }
 
+  /**
+   * Get token usage analytics
+   */
+  getTokenAnalytics = async (req, res) => {
+    try {
+      const { project_name, memory_type, limit = 10 } = req.query;
+
+      // Get project-level token usage
+      const projectTokens = await this.getProjectTokenUsage(project_name);
+      
+      // Get token usage by memory type
+      const typeBreakdown = await this.getTokensByMemoryType(project_name);
+      
+      // Get top token-consuming memories
+      const topMemories = await this.getTopTokenMemories(project_name, memory_type, limit);
+      
+      // Get token usage over time
+      const tokenTrends = await this.getTokenTrends(project_name);
+
+      res.json(ResponseUtil.success({
+        summary: projectTokens,
+        byType: typeBreakdown,
+        topMemories,
+        trends: tokenTrends,
+        generatedAt: new Date().toISOString()
+      }));
+    } catch (error) {
+      this.handleError(res, error, 'Failed to retrieve token analytics');
+    }
+  }
+
+  /**
+   * Get memory-level token details
+   */
+  getMemoryTokenDetails = async (req, res) => {
+    try {
+      const { project_id, limit = 50, offset = 0 } = req.query;
+
+      const result = await this.databaseService.query(`
+        SELECT 
+          m.id,
+          m.content,
+          m.memory_type,
+          m.token_metadata,
+          m.created_at,
+          m.updated_at,
+          p.name as project_name
+        FROM memories m
+        JOIN projects p ON m.project_id = p.id
+        WHERE ($1::int IS NULL OR m.project_id = $1)
+          AND m.token_metadata IS NOT NULL
+        ORDER BY (m.token_metadata->>'total_tokens')::int DESC NULLS LAST
+        LIMIT $2 OFFSET $3
+      `, [project_id || null, limit, offset]);
+
+      const memories = result.rows.map(row => ({
+        id: row.id,
+        content: row.content.substring(0, 100) + '...',
+        memory_type: row.memory_type,
+        project_name: row.project_name,
+        tokens: row.token_metadata || {},
+        created_at: row.created_at,
+        updated_at: row.updated_at
+      }));
+
+      res.json(ResponseUtil.success({
+        memories,
+        pagination: {
+          limit: parseInt(limit),
+          offset: parseInt(offset),
+          total: memories.length
+        }
+      }));
+    } catch (error) {
+      this.handleError(res, error, 'Failed to retrieve memory token details');
+    }
+  }
+
+  // Helper methods for token analytics
+  async getProjectTokenUsage(projectName) {
+    const whereClause = projectName ? 'WHERE p.name = $1' : '';
+    const params = projectName ? [projectName] : [];
+    
+    const result = await this.databaseService.query(`
+      SELECT 
+        COUNT(m.id) as total_memories,
+        COUNT(m.token_metadata) as memories_with_tokens,
+        COALESCE(SUM((m.token_metadata->>'total_tokens')::int), 0) as total_tokens,
+        COALESCE(SUM((m.token_metadata->>'content_tokens')::int), 0) as content_tokens,
+        COALESCE(SUM((m.token_metadata->>'summary_tokens')::int), 0) as summary_tokens,
+        COALESCE(SUM((m.token_metadata->>'tags_tokens')::int), 0) as tags_tokens,
+        COALESCE(AVG((m.token_metadata->>'total_tokens')::int), 0)::int as avg_tokens_per_memory
+      FROM memories m
+      JOIN projects p ON m.project_id = p.id
+      ${whereClause}
+    `, params);
+    
+    return result.rows[0];
+  }
+
+  async getTokensByMemoryType(projectName) {
+    const whereClause = projectName ? 'WHERE p.name = $1' : '';
+    const params = projectName ? [projectName] : [];
+    
+    const result = await this.databaseService.query(`
+      SELECT 
+        m.memory_type,
+        COUNT(m.id) as count,
+        COALESCE(SUM((m.token_metadata->>'total_tokens')::int), 0) as total_tokens,
+        COALESCE(AVG((m.token_metadata->>'total_tokens')::int), 0)::int as avg_tokens
+      FROM memories m
+      JOIN projects p ON m.project_id = p.id
+      ${whereClause}
+      GROUP BY m.memory_type
+      ORDER BY total_tokens DESC
+    `, params);
+    
+    return result.rows;
+  }
+
+  async getTopTokenMemories(projectName, memoryType, limit) {
+    const conditions = [];
+    const params = [];
+    
+    if (projectName) {
+      params.push(projectName);
+      conditions.push(`p.name = $${params.length}`);
+    }
+    
+    if (memoryType) {
+      params.push(memoryType);
+      conditions.push(`m.memory_type = $${params.length}`);
+    }
+    
+    const whereClause = conditions.length > 0 ? `WHERE ${conditions.join(' AND ')}` : '';
+    params.push(limit);
+    
+    const result = await this.databaseService.query(`
+      SELECT 
+        m.id,
+        m.memory_type,
+        p.name as project_name,
+        SUBSTRING(m.content, 1, 100) as content_preview,
+        m.token_metadata,
+        m.created_at
+      FROM memories m
+      JOIN projects p ON m.project_id = p.id
+      ${whereClause}
+      ORDER BY (m.token_metadata->>'total_tokens')::int DESC NULLS LAST
+      LIMIT $${params.length}
+    `, params);
+    
+    return result.rows;
+  }
+
+  async getTokenTrends(projectName) {
+    const whereClause = projectName ? 'AND p.name = $1' : '';
+    const params = projectName ? [projectName] : [];
+    
+    const result = await this.databaseService.query(`
+      SELECT 
+        DATE_TRUNC('day', m.created_at) as date,
+        COUNT(m.id) as memories_created,
+        COALESCE(SUM((m.token_metadata->>'total_tokens')::int), 0) as tokens_added
+      FROM memories m
+      JOIN projects p ON m.project_id = p.id
+      WHERE m.created_at > NOW() - INTERVAL '30 days'
+        ${whereClause}
+      GROUP BY DATE_TRUNC('day', m.created_at)
+      ORDER BY date
+    `, params);
+    
+    return result.rows;
+  }
+
   // Helper methods
   async getDatabaseStats() {
     const stats = await this.databaseService.query(`

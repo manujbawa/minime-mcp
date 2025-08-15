@@ -58,7 +58,11 @@ export class MemorySearchService {
             
             // Formatting
             format = 'raw', // 'raw', 'markdown', 'summary'
-            maxContentLength = null
+            maxContentLength = null,
+            
+            // Project linking options
+            includeLinkedProjects = false,
+            linkedProjectDepth = 2
         } = options;
 
         try {
@@ -101,7 +105,9 @@ export class MemorySearchService {
                 contentWeight,
                 tagWeight,
                 enableOverlapBoost,
-                enableDiversity
+                enableDiversity,
+                includeLinkedProjects,
+                linkedProjectDepth
             };
 
             // Use hybrid search engine or fallback to legacy search
@@ -135,13 +141,24 @@ export class MemorySearchService {
                 query: typeof query === 'string' ? query : null
             });
 
+            // Detect potential project links if searching within a specific project
+            let linkSuggestions = null;
+            if (resolvedProjectId && !includeLinkedProjects && results.length > 0) {
+                linkSuggestions = await this._detectProjectLinkSuggestions(
+                    results, 
+                    resolvedProjectId,
+                    typeof query === 'string' ? query : null
+                );
+            }
+
             return {
                 results: formattedResults,
                 query: typeof query === 'string' ? query : '[embedding]',
                 total: results.length,
                 search_mode: searchMode,
                 search_capabilities: results.length > 0 ? results[0].search_mode : null,
-                options
+                options,
+                ...(linkSuggestions && { link_suggestions: linkSuggestions })
             };
 
         } catch (error) {
@@ -509,6 +526,117 @@ ${contentPreview}`;
         } catch (error) {
             this.logger.error('Legacy find similar failed:', error);
             return [];
+        }
+    }
+
+    /**
+     * Detect potential project link suggestions from search results
+     */
+    async _detectProjectLinkSuggestions(results, currentProjectId) {
+        try {
+            // Count references to other projects in the results
+            const projectReferences = new Map();
+            const projectPatterns = new Map();
+            
+            // Get all project names for pattern matching
+            const projectsResult = await this.db.query('SELECT id, name FROM projects WHERE id != $1', [currentProjectId]);
+            const projects = projectsResult.rows;
+            
+            // Analyze results for project references
+            results.forEach(memory => {
+                projects.forEach(project => {
+                    // Check content for project name mentions
+                    const regex = new RegExp(`\\b${project.name}\\b`, 'gi');
+                    const matches = (memory.content.match(regex) || []).length;
+                    
+                    if (matches > 0) {
+                        const current = projectReferences.get(project.id) || { 
+                            id: project.id, 
+                            name: project.name, 
+                            count: 0, 
+                            samples: [] 
+                        };
+                        current.count += matches;
+                        
+                        // Add sample context (limit to 3 samples)
+                        if (current.samples.length < 3) {
+                            const matchIndex = memory.content.search(regex);
+                            if (matchIndex !== -1) {
+                                const start = Math.max(0, matchIndex - 50);
+                                const end = Math.min(memory.content.length, matchIndex + 100);
+                                current.samples.push(memory.content.substring(start, end));
+                            }
+                        }
+                        
+                        projectReferences.set(project.id, current);
+                    }
+                    
+                    // Check for shared tags
+                    if (memory.smart_tags && Array.isArray(memory.smart_tags)) {
+                        const sharedTags = memory.smart_tags.filter(tag => 
+                            project.name.toLowerCase().includes(tag.toLowerCase()) ||
+                            tag.toLowerCase().includes(project.name.toLowerCase())
+                        );
+                        
+                        if (sharedTags.length > 0) {
+                            if (!projectPatterns.has(project.id)) {
+                                projectPatterns.set(project.id, {
+                                    id: project.id,
+                                    name: project.name,
+                                    patterns: new Set()
+                                });
+                            }
+                            sharedTags.forEach(tag => projectPatterns.get(project.id).patterns.add(tag));
+                        }
+                    }
+                });
+            });
+            
+            // Build suggestions
+            const suggestions = [];
+            
+            // Add suggestions based on references
+            projectReferences.forEach((ref) => {
+                if (ref.count >= 2) { // At least 2 references
+                    suggestions.push({
+                        project_id: ref.id,
+                        project_name: ref.name,
+                        suggested_link_type: ref.count > 5 ? 'dependency' : 'related',
+                        confidence: Math.min(0.9, ref.count * 0.15),
+                        reason: `Found ${ref.count} references to "${ref.name}" in search results`,
+                        evidence: {
+                            reference_count: ref.count,
+                            sample_contexts: ref.samples
+                        }
+                    });
+                }
+            });
+            
+            // Add suggestions based on patterns
+            projectPatterns.forEach((pattern, projectId) => {
+                if (pattern.patterns.size >= 2 && !suggestions.find(s => s.project_id === projectId)) {
+                    suggestions.push({
+                        project_id: pattern.id,
+                        project_name: pattern.name,
+                        suggested_link_type: 'related',
+                        confidence: Math.min(0.7, pattern.patterns.size * 0.2),
+                        reason: `Shared patterns/tags detected: ${Array.from(pattern.patterns).join(', ')}`,
+                        evidence: {
+                            shared_patterns: Array.from(pattern.patterns)
+                        }
+                    });
+                }
+            });
+            
+            // Sort by confidence
+            suggestions.sort((a, b) => b.confidence - a.confidence);
+            
+            // Return top 3 suggestions
+            return suggestions.slice(0, 3);
+            
+        } catch (error) {
+            this.logger.error('Failed to detect project link suggestions:', error);
+            return null; // Don't fail the search if suggestion detection fails
         }
     }
 }

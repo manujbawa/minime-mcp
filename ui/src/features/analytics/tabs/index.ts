@@ -3,3 +3,4 @@ export { TrendsTab } from './TrendsTab';
 export { DistributionsTab } from './DistributionsTab';
 export { PerformanceTab } from './PerformanceTab';
 export { IntelligenceTab } from './IntelligenceTab';
+export { TokenUsageTab } from './TokenUsageTab';

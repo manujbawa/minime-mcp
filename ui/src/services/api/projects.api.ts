@@ -136,4 +136,80 @@ export class ProjectsAPI {
     );
     return response.data;
   }
+
+  // Project Links
+  static async getProjectLinks(
+    projectName: string,
+    params?: { 
+      link_type?: string; 
+      include_stats?: boolean;
+    }
+  ): Promise<ApiResponse<any[]>> {
+    const response = await apiClient.get(
+      `/api/projects/${encodeURIComponent(projectName)}/links`,
+      { params }
+    );
+    return response.data;
+  }
+
+  static async createProjectLink(
+    projectName: string,
+    data: {
+      target_project_name?: string;
+      target_project_id?: number;
+      link_type?: string;
+      visibility?: string;
+      metadata?: any;
+    }
+  ): Promise<ApiResponse<any>> {
+    const response = await apiClient.post(
+      `/api/projects/${encodeURIComponent(projectName)}/links`,
+      data
+    );
+    return response.data;
+  }
+
+  static async updateProjectLink(
+    projectName: string,
+    data: {
+      target_project_id: number;
+      link_type: string;
+      visibility?: string;
+      metadata?: any;
+    }
+  ): Promise<ApiResponse<any>> {
+    const response = await apiClient.put(
+      `/api/projects/${encodeURIComponent(projectName)}/links`,
+      data
+    );
+    return response.data;
+  }
+
+  static async deleteProjectLink(
+    projectName: string,
+    params: {
+      target_project_id: number;
+      link_type?: string;
+    }
+  ): Promise<ApiResponse<void>> {
+    const response = await apiClient.delete(
+      `/api/projects/${encodeURIComponent(projectName)}/links`,
+      { params }
+    );
+    return response.data;
+  }
+
+  static async getRelationshipHints(
+    projectName: string,
+    params?: {
+      min_references?: number;
+      min_shared_tags?: number;
+    }
+  ): Promise<ApiResponse<any[]>> {
+    const response = await apiClient.get(
+      `/api/projects/${encodeURIComponent(projectName)}/relationship-hints`,
+      { params }
+    );
+    return response.data;
+  }
 }

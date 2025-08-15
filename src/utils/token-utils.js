@@ -63,6 +63,29 @@ class TokenUtils {
     
     return text.substring(0, estimatedChars) + '...';
   }
+
+  /**
+   * Calculate token metadata for a memory
+   * @param {string} content - Main memory content
+   * @param {string|null} summary - Optional summary text
+   * @param {Array<string>} tags - Array of tags
+   * @returns {Object} Token metadata object
+   */
+  calculateTokenMetadata(content, summary = null, tags = []) {
+    const contentTokens = this.estimateTokens(content || '');
+    const summaryTokens = summary ? this.estimateTokens(summary) : 0;
+    const tagsTokens = tags.length > 0 ? this.estimateTokens(tags.join(' ')) : 0;
+    const totalTokens = contentTokens + summaryTokens + tagsTokens;
+
+    return {
+      content_tokens: contentTokens,
+      summary_tokens: summaryTokens,
+      tags_tokens: tagsTokens,
+      total_tokens: totalTokens,
+      calculation_method: 'char_estimate_4',
+      calculated_at: new Date().toISOString()
+    };
+  }
 }
 
 export { TokenUtils };
