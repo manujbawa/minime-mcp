@@ -1,4 +1,4 @@
-# MiniMe-MCP v0.2.0
+# MiniMe-MCP v0.2.5
 
 # 🚀 **The IDE Agent upgrade that creates your developer digital twin—across all your projects.**
 
@@ -134,6 +134,23 @@ Your code. Your patterns. Your decisions. **Remembered. Connected. Evolved.**
 
 *Built for the Model Context Protocol. Compatible with VS Code, Cursor, Claude Desktop, Windsurf, and the expanding universe of AI-powered development tools.*
 
+## 🆕 What's New in v0.2.5
+
+### Memory Type Restructuring
+- **Clear separation** between working memories and project documents
+- **Working memories**: notes, decisions, rules, code snippets, learnings, research, discussions, progress, tasks, debug logs
+- **Project documents**: briefs, PRDs, implementation plans (use `manage_project` tool)
+
+### Project Linkage System
+- Create relationships between projects (parent/child, dependencies, forks)
+- Visualize project connections with interactive graphs
+- Share memories across linked projects with visibility controls
+
+### Bug Fixes
+- Fixed project link creation type errors
+- Corrected SQL functions for relationship detection
+- Improved tool descriptions to prevent confusion
+
 ## ✨ Why MiniMe-MCP?
 
 - **Persistent Context**: Your AI assistant remembers everything - decisions, code patterns, project knowledge
@@ -177,10 +194,9 @@ docker run -d \
   --restart unless-stopped \
   -p 5432:5432 \
   -p 8000:8000 \
-  -p 9090:9090 \
+  -p 9090:9000 \
   -v minime-mcp-v9:/data \
   -e POSTGRES_PASSWORD=minime_password \
-  -e UI_PORT=9090 \
   manujbawa/minimemcp:latest
 ```
 
@@ -197,12 +213,12 @@ npm install -g @minimemcp/mcp-client
 ```
 
 ### Available MCP Tools
-- `store_memory` - Intelligent memory storage with auto-tagging
-- `search_memories` - Hybrid semantic/keyword search
-- `get_insights` - AI-powered pattern analysis
-- `start_thinking` - Structured reasoning sequences
-- `manage_tasks` - Project task management
-- `manage_project` - Documentation and project management
+- `store_memory` - Store working memories (notes, learnings, progress) with auto-tagging
+- `search_memories` - Hybrid semantic/keyword search across all memories
+- `get_insights` - AI-powered pattern analysis and trend detection
+- `start_thinking` - Structured reasoning sequences for complex problems
+- `manage_tasks` - Project task tracking and management
+- `manage_project` - Create/update formal project documents (briefs, PRDs, plans)
 
 ## 🎯 IDE Integration
 
@@ -239,20 +255,18 @@ docker run -d \
   --name minimemcp \
   -e LLM_MODEL="llama2:13b" \
   -e POSTGRES_PASSWORD=minime_password \
-  -e UI_PORT=9090 \
-  -p 5432:5432 -p 8000:8000 -p 9090:9090 \
+  -p 5432:5432 -p 8000:8000 -p 9090:9000 \
   -v minime-mcp-v9:/data \
   manujbawa/minimemcp:latest
 ```
 
 ### Custom Ports
 ```bash
+# Example: Run MCP API on port 8080 locally
 docker run -d \
   --name minimemcp \
-  -e MCP_PORT="8080" \
-  -e UI_PORT="9090" \
   -e POSTGRES_PASSWORD=minime_password \
-  -p 5432:5432 -p 8080:8080 -p 9090:9090 \
+  -p 5432:5432 -p 8080:8000 -p 9090:9000 \
   -v minime-mcp-v9:/data \
   manujbawa/minimemcp:latest
 ```

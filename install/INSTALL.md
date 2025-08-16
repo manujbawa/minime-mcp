@@ -60,9 +60,10 @@ Start the MiniMe-MCP server with Docker. The image is available on Docker Hub wi
 ```bash
 docker run -d \
   --name minimemcp \
+  --restart unless-stopped \
   -p 5432:5432 \
   -p 8000:8000 \
-  -p 9000:9000 \
+  -p 9090:9000 \
   -v minime-mcp-v9:/data \
   -e POSTGRES_PASSWORD=minime_password \
   manujbawa/minimemcp:latest
@@ -71,7 +72,7 @@ docker run -d \
 **What this does:**
 - Runs MiniMe-MCP in the background as a Docker container
 - Automatically selects the correct architecture (AMD64 for Intel/AMD, ARM64 for Apple Silicon)
-- Exposes ports: 5432 (PostgreSQL), 8000 (MCP API), 9000 (Web UI)
+- Exposes ports: 5432 (PostgreSQL), 8000 (MCP API), 9090 (Web UI - mapped to container port 9000)
 - Creates a persistent Docker volume `minime-mcp-v9` for your data
 - Uses the default LLM (`deepseek-coder:6.7b`) and embedding model (`mxbai-embed-large`)
 - Connects to Ollama running on your host at `http://host.docker.internal:11434`
