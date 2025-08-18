@@ -1,0 +1,381 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Memory-Augmented AI Flow</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+        
+        .flow-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            padding: 40px;
+        }
+        
+        .diagram-title {
+            text-align: center;
+            font-size: 2rem;
+            font-weight: bold;
+            color: #1a73e8;
+            margin-bottom: 10px;
+        }
+        
+        .diagram-subtitle {
+            text-align: center;
+            font-size: 1.1rem;
+            color: #6c757d;
+            margin-bottom: 40px;
+        }
+        
+        .flow-diagram {
+            position: relative;
+            width: 100%;
+            height: 400px;
+            margin: 40px 0;
+        }
+        
+        /* Main Flow Components */
+        .flow-step {
+            position: absolute;
+            background: white;
+            border: 3px solid;
+            border-radius: 12px;
+            padding: 15px;
+            text-align: center;
+            font-weight: bold;
+            font-size: 12px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            transition: all 0.3s ease;
+            min-width: 120px;
+        }
+        
+        .flow-step:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+        }
+        
+        /* Main horizontal flow */
+        .developer-input {
+            top: 50px;
+            left: 20px;
+            border-color: #4285f4;
+            background: linear-gradient(135deg, #e3f2fd, #bbdefb);
+            color: #1565c0;
+        }
+        
+        .memory-retrieval {
+            top: 50px;
+            left: 200px;
+            border-color: #34a853;
+            background: linear-gradient(135deg, #e8f5e8, #c8e6c9);
+            color: #2e7d32;
+        }
+        
+        .context-injection {
+            top: 50px;
+            left: 380px;
+            border-color: #fbbc04;
+            background: linear-gradient(135deg, #fff3e0, #ffcc02);
+            color: #ef6c00;
+        }
+        
+        .local-llm {
+            top: 50px;
+            left: 560px;
+            border-color: #ea4335;
+            background: linear-gradient(135deg, #ffebee, #ffcdd2);
+            color: #c62828;
+        }
+        
+        .response {
+            top: 50px;
+            left: 740px;
+            border-color: #9c27b0;
+            background: linear-gradient(135deg, #f3e5f5, #e1bee7);
+            color: #6a1b9a;
+        }
+        
+        .memory-storage {
+            top: 50px;
+            left: 920px;
+            border-color: #00bcd4;
+            background: linear-gradient(135deg, #e0f7fa, #b2ebf2);
+            color: #00838f;
+        }
+        
+        /* Feedback loop components */
+        .vector-search {
+            top: 200px;
+            left: 150px;
+            border-color: #34a853;
+            background: linear-gradient(135deg, #e8f5e8, #a5d6a7);
+            color: #1b5e20;
+            width: 160px;
+        }
+        
+        .semantic-clustering {
+            top: 200px;
+            left: 870px;
+            border-color: #00bcd4;
+            background: linear-gradient(135deg, #e0f7fa, #80deea);
+            color: #006064;
+            width: 160px;
+        }
+        
+        /* Technology labels */
+        .tech-label {
+            font-size: 10px;
+            color: #666;
+            font-weight: normal;
+            margin-top: 5px;
+            font-style: italic;
+        }
+        
+        /* Arrows */
+        .arrow {
+            position: absolute;
+            color: #5f6368;
+            font-size: 24px;
+            font-weight: bold;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        /* Horizontal arrows */
+        .arrow-h1 { top: 75px; left: 160px; }
+        .arrow-h2 { top: 75px; left: 340px; }
+        .arrow-h3 { top: 75px; left: 520px; }
+        .arrow-h4 { top: 75px; left: 700px; }
+        .arrow-h5 { top: 75px; left: 880px; }
+        
+        /* Vertical arrows */
+        .arrow-up {
+            top: 160px;
+            left: 230px;
+            color: #34a853;
+            animation: bounce-up 2s infinite;
+        }
+        
+        .arrow-down {
+            top: 140px;
+            left: 950px;
+            color: #00bcd4;
+            animation: bounce-down 2s infinite;
+        }
+        
+        @keyframes bounce-up {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-10px); }
+        }
+        
+        @keyframes bounce-down {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(10px); }
+        }
+        
+        /* Curved connection lines */
+        .connection-line {
+            position: absolute;
+            stroke: #5f6368;
+            stroke-width: 2;
+            fill: none;
+            stroke-dasharray: 5,5;
+            opacity: 0.7;
+        }
+        
+        .svg-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+        }
+        
+        /* Learning loops indicators */
+        .learning-loop {
+            position: absolute;
+            background: rgba(255,255,255,0.95);
+            border: 2px solid #ff9800;
+            border-radius: 8px;
+            padding: 10px;
+            font-size: 11px;
+            color: #ef6c00;
+            font-weight: bold;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        
+        .loop1 {
+            top: 280px;
+            left: 50px;
+            width: 200px;
+        }
+        
+        .loop2 {
+            top: 280px;
+            left: 750px;
+            width: 200px;
+        }
+        
+        /* Models info */
+        .models-info {
+            background: #f8f9fa;
+            border-radius: 10px;
+            padding: 20px;
+            margin-top: 30px;
+            border-left: 4px solid #1a73e8;
+        }
+        
+        .models-title {
+            font-weight: bold;
+            color: #1a73e8;
+            margin-bottom: 10px;
+        }
+        
+        .model-list {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            font-size: 14px;
+        }
+        
+        .model-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .model-icon {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: #4285f4;
+        }
+    </style>
+</head>
+<body>
+    <div class="flow-container">
+        <h1 class="diagram-title">Memory-Augmented AI Processing Flow</h1>
+        <p class="diagram-subtitle">How MiniMe-MCP Creates Contextual Intelligence</p>
+        
+        <div class="flow-diagram">
+            <!-- SVG for curved lines -->
+            <svg class="svg-overlay" viewBox="0 0 1100 350">
+                <!-- Curved line from Vector Search to Memory Retrieval -->
+                <path class="connection-line" d="M 230 200 Q 180 150 230 100" />
+                <!-- Curved line from Memory Storage to Semantic Clustering -->
+                <path class="connection-line" d="M 950 100 Q 1000 150 950 200" />
+            </svg>
+            
+            <!-- Main horizontal flow -->
+            <div class="flow-step developer-input">
+                <div>Developer Input</div>
+                <div class="tech-label">Questions, Code, Decisions</div>
+            </div>
+            
+            <div class="arrow arrow-h1">→</div>
+            
+            <div class="flow-step memory-retrieval">
+                <div>Memory Retrieval</div>
+                <div class="tech-label">Hybrid Search</div>
+            </div>
+            
+            <div class="arrow arrow-h2">→</div>
+            
+            <div class="flow-step context-injection">
+                <div>Context Injection</div>
+                <div class="tech-label">Dynamic Prompts</div>
+            </div>
+            
+            <div class="arrow arrow-h3">→</div>
+            
+            <div class="flow-step local-llm">
+                <div>Local LLM</div>
+                <div class="tech-label">deepseek-coder:6.7b</div>
+            </div>
+            
+            <div class="arrow arrow-h4">→</div>
+            
+            <div class="flow-step response">
+                <div>Response</div>
+                <div class="tech-label">Context-Aware</div>
+            </div>
+            
+            <div class="arrow arrow-h5">→</div>
+            
+            <div class="flow-step memory-storage">
+                <div>Memory Storage</div>
+                <div class="tech-label">PostgreSQL</div>
+            </div>
+            
+            <!-- Feedback loop components -->
+            <div class="flow-step vector-search">
+                <div>Vector Search</div>
+                <div class="tech-label">pgvector + embeddings</div>
+            </div>
+            
+            <div class="arrow arrow-up">↑</div>
+            
+            <div class="flow-step semantic-clustering">
+                <div>Semantic Clustering</div>
+                <div class="tech-label">Pattern Recognition</div>
+            </div>
+            
+            <div class="arrow arrow-down">↓</div>
+            
+            <!-- Learning loops -->
+            <div class="learning-loop loop1">
+                <div>🔄 Learning Loop 1:</div>
+                <div>Vector similarity finds relevant past context</div>
+            </div>
+            
+            <div class="learning-loop loop2">
+                <div>🔄 Learning Loop 2:</div>
+                <div>New patterns enhance memory clusters</div>
+            </div>
+        </div>
+        
+        <!-- Technical Implementation -->
+        <div class="models-info">
+            <div class="models-title">MiniMe-MCP Technical Implementation</div>
+            <div class="model-list">
+                <div class="model-item">
+                    <div class="model-icon"></div>
+                    <div><strong>Embeddings:</strong> mxbai-embed-large (1024-dim vectors)</div>
+                </div>
+                <div class="model-item">
+                    <div class="model-icon"></div>
+                    <div><strong>Storage:</strong> PostgreSQL + pgvector extension</div>
+                </div>
+                <div class="model-item">
+                    <div class="model-icon"></div>
+                    <div><strong>LLM:</strong> deepseek-coder:6.7b via Ollama</div>
+                </div>
+                <div class="model-item">
+                    <div class="model-icon"></div>
+                    <div><strong>Search:</strong> Hybrid semantic + keyword matching</div>
+                </div>
+                <div class="model-item">
+                    <div class="model-icon"></div>
+                    <div><strong>Clustering:</strong> Hierarchical taxonomy + pattern detection</div>
+                </div>
+                <div class="model-item">
+                    <div class="model-icon"></div>
+                    <div><strong>Privacy:</strong> 100% local processing, no cloud dependencies</div>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

@@ -41,48 +41,48 @@ export class InsightQueryService {
             let paramIndex = 1;
 
             // System version
-            whereClauses.push('system_version = $' + paramIndex++);
+            whereClauses.push('i.system_version = $' + paramIndex++);
             params.push('v2');
 
             // Project filter
             if (projectId) {
-                whereClauses.push('project_id = $' + paramIndex++);
+                whereClauses.push('i.project_id = $' + paramIndex++);
                 params.push(projectId);
             }
 
             // Type filters
             if (insightTypes && insightTypes.length > 0) {
-                whereClauses.push('insight_type = ANY($' + paramIndex++ + ')');
+                whereClauses.push('i.insight_type = ANY($' + paramIndex++ + ')');
                 params.push(insightTypes);
             }
 
             // Category filters
             if (!includeAllCategories && categories && categories.length > 0) {
-                whereClauses.push('(insight_category = ANY($' + paramIndex + ') OR insight_subcategory = ANY($' + paramIndex + '))');
+                whereClauses.push('(i.insight_category = ANY($' + paramIndex + ') OR i.insight_subcategory = ANY($' + paramIndex + '))');
                 params.push(categories);
                 paramIndex++;
             }
 
             // Confidence range
             if (minConfidence !== undefined) {
-                whereClauses.push('confidence_score >= $' + paramIndex++);
+                whereClauses.push('i.confidence_score >= $' + paramIndex++);
                 params.push(minConfidence);
             }
             if (maxConfidence !== undefined) {
-                whereClauses.push('confidence_score <= $' + paramIndex++);
+                whereClauses.push('i.confidence_score <= $' + paramIndex++);
                 params.push(maxConfidence);
             }
 
             // Time range
             if (timeRange) {
-                whereClauses.push(`created_at >= NOW() - ($${paramIndex}::text)::interval`);
+                whereClauses.push(`i.created_at >= NOW() - ($${paramIndex}::text)::interval`);
                 params.push(timeRange);
                 paramIndex++;
             }
 
             // Tags filter
             if (tags && tags.length > 0) {
-                whereClauses.push('tags && $' + paramIndex++);
+                whereClauses.push('i.tags && $' + paramIndex++);
                 params.push(tags);
             }
 
@@ -90,7 +90,7 @@ export class InsightQueryService {
             if (technologies && technologies.length > 0) {
                 whereClauses.push(`
                     EXISTS (
-                        SELECT 1 FROM jsonb_array_elements(technologies) AS tech
+                        SELECT 1 FROM jsonb_array_elements(i.technologies) AS tech
                         WHERE tech->>'name' = ANY($${paramIndex++})
                     )
                 `);
@@ -101,7 +101,7 @@ export class InsightQueryService {
             let searchTextParamIndex = null;
             if (searchText) {
                 searchTextParamIndex = paramIndex;
-                whereClauses.push('search_vector @@ plainto_tsquery($' + paramIndex++ + ')');
+                whereClauses.push('i.search_vector @@ plainto_tsquery($' + paramIndex++ + ')');
                 params.push(searchText);
             }
 
@@ -124,8 +124,8 @@ export class InsightQueryService {
                     ` : ''}
                     ${includeMetrics ? `
                         jsonb_build_object(
-                            'avg_confidence', AVG(confidence_score) OVER(),
-                            'total_in_category', COUNT(*) OVER(PARTITION BY insight_category)
+                            'avg_confidence', AVG(i.confidence_score) OVER(),
+                            'total_in_category', COUNT(*) OVER(PARTITION BY i.insight_category)
                         ) as metrics,
                     ` : ''}
                     COUNT(*) OVER() as total_count
@@ -133,9 +133,9 @@ export class InsightQueryService {
                 LEFT JOIN projects p ON i.project_id = p.id
                 ${whereClause}
                 ORDER BY 
-                    ${searchText ? 'ts_rank(search_vector, plainto_tsquery($' + searchTextParamIndex + ')) DESC,' : ''}
-                    confidence_score DESC,
-                    created_at DESC
+                    ${searchText ? 'ts_rank(i.search_vector, plainto_tsquery($' + searchTextParamIndex + ')) DESC,' : ''}
+                    i.confidence_score DESC,
+                    i.created_at DESC
                 LIMIT $${paramIndex++} OFFSET $${paramIndex++}
             `;
 
