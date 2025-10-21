@@ -26,7 +26,7 @@ A memory layer for your IDE agents. One system, works with **Cursor, Claude Desk
 
 ## Installation: 
 
-📖 **[Complete Installation Guide](install/install.md)** - Step-by-step setup for all supported IDEs
+📖 **[Complete Installation Guide](install/INSTALL.md)** - Step-by-step setup for all supported IDEs
 
 ## How It Works
 
