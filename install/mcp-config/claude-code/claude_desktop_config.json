@@ -1,12 +1,1 @@
-{
-  "mcpServers": {
-    "minime": {
-      "command": "/bin/sh",
-      "args": ["-c", "PATH=/opt/homebrew/bin:/opt/homebrew/opt/node@22/bin:/usr/local/bin:/usr/bin:$PATH npx -y minime-mcp"],
-      "env": {
-        "MINIME_SERVER_URL": "http://localhost:8000",
-        "MINIME_DEBUG": "true"
-      }
-    }
-  }
-}
+claude mcp add --transport http minime http://localhost:8000/mcp

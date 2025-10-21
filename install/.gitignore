@@ -1,0 +1,12 @@
+# User's custom overrides
+docker-compose.override.yml
+
+# Local data and logs
+data/
+logs/
+*.log
+
+# Environment files with secrets
+.env
+.env.local
+.env.*.local
