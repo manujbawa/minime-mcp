@@ -637,16 +637,6 @@ minime-mcp init
 # See full installation guide: [link]
 ```
 
----
-
-## 🔗 Resources
-
-- **Documentation**: [docs.minime-mcp.dev]
-- **GitHub**: [github.com/your-org/minime-mcp]
-- **Discord Community**: [discord.gg/minime-mcp]
-- **Tutorial Videos**: [youtube.com/@minime-mcp]
-
----
 
 *Works with: Cursor • Claude Desktop • GitHub Copilot • Windsurf • VS Code • Any MCP-compatible tool*
 
