@@ -55,6 +55,7 @@ Cursor: [Generates code using YOUR battle-tested patterns]
 ```
 
 ![Memory Search Interface](images/s1.jpg)
+
 *Works with Claude Code, Cursor and Claude Desktop and more..*
 
 ### **Get Cross-Project Insights**
@@ -76,6 +77,7 @@ Claude: "Analyzed 89 memories across 5 projects. Pattern detected:
 ```
 
 ![Cross-Project Pattern Analysis](images/s2.jpg)
+
 *Works with Claude Code, Cursor and Claude Desktop and more..*
 
 ### **Search Your Documents**
@@ -217,6 +219,7 @@ Cursor: [Generates code matching section 3 of your PDF exactly]
 ```
 
 ![Document Upload and Processing](images/s3.jpg)
+
 *Works with Claude Code, Cursor and Claude Desktop and more..*
 
 ### **Keep Memory Clean**
@@ -240,6 +243,7 @@ Claude: "✓ Inactivated 47 Redis memories (soft delete, recoverable)
 ```
 
 ![Memory Lifecycle Management](images/s4.jpg)
+
 *Works with Claude Code, Cursor and Claude Desktop and more..*
 
 ---
@@ -247,6 +251,7 @@ Claude: "✓ Inactivated 47 Redis memories (soft delete, recoverable)
 ## 🚀 What's New in v0.5.0
 
 ![MiniMe-MCP v0.5.0 Dashboard](images/s5.jpg)
+
 *Works with Claude Code, Cursor and Claude Desktop and more..*
 
 ### 📚 **Document Upload & RAG System**
