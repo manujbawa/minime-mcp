@@ -24,6 +24,10 @@ A memory layer for your IDE agents. One system, works with **Cursor, Claude Desk
 
 ---
 
+## Installation: 
+
+📖 **[Complete Installation Guide](install/install.md)** - Step-by-step setup for all supported IDEs
+
 ## How It Works
 
 ### **Search Your Memories**
@@ -50,6 +54,9 @@ You: "Build auth for my checkout flow"
 Cursor: [Generates code using YOUR battle-tested patterns]
 ```
 
+![Memory Search Interface](images/s1.jpg)
+*Works with Claude Code, Cursor and Claude Desktop and more..*
+
 ### **Get Cross-Project Insights**
 ```
 You (in Claude Desktop): "Get insights on database patterns across my projects"
@@ -67,6 +74,9 @@ Claude: "Analyzed 89 memories across 5 projects. Pattern detected:
          Recommendation: Include PgBouncer from day 1. You'll need it,
          and adding it later caused 2 hours of downtime in admin-api."
 ```
+
+![Cross-Project Pattern Analysis](images/s2.jpg)
+*Works with Claude Code, Cursor and Claude Desktop and more..*
 
 ### **Search Your Documents**
 ```
@@ -206,6 +216,9 @@ Cursor: [Generates code matching section 3 of your PDF exactly]
          → httpOnly, Secure, SameSite=Strict cookies"
 ```
 
+![Document Upload and Processing](images/s3.jpg)
+*Works with Claude Code, Cursor and Claude Desktop and more..*
+
 ### **Keep Memory Clean**
 ```
 You: "Search Redis caching patterns"
@@ -226,9 +239,15 @@ Claude: "✓ Inactivated 47 Redis memories (soft delete, recoverable)
          Your context stays current as your stack evolves."
 ```
 
+![Memory Lifecycle Management](images/s4.jpg)
+*Works with Claude Code, Cursor and Claude Desktop and more..*
+
 ---
 
 ## 🚀 What's New in v0.5.0
+
+![MiniMe-MCP v0.5.0 Dashboard](images/s5.jpg)
+*Works with Claude Code, Cursor and Claude Desktop and more..*
 
 ### 📚 **Document Upload & RAG System**
 Turn any PDF, DOCX, or code file into searchable agent knowledge.
