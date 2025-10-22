@@ -1,4 +1,4 @@
-# 🧠 MiniMe-MCP v0.5.2: Your IDE Agent's Persistent Brain
+# 🧠 MiniMe-MCP v0.5.4: Your IDE Agent's Persistent Brain
 
 **Context Engineering for the Intelligence Age**
 
@@ -248,9 +248,9 @@ Claude: "✓ Inactivated 47 Redis memories (soft delete, recoverable)
 
 ---
 
-## 🚀 What's New in v0.5.0
+## 🚀 What's New in v0.5.4
 
-![MiniMe-MCP v0.5.0 Dashboard](images/s5.jpg)
+![MiniMe-MCP v0.5.4 Dashboard](images/s5.jpg)
 
 *Works with Claude Code, Cursor and Claude Desktop and more..*
 
