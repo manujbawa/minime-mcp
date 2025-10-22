@@ -1,4 +1,4 @@
-# 🧠 MiniMe-MCP v0.5.0: Your IDE Agent's Persistent Brain
+# 🧠 MiniMe-MCP v0.5.2: Your IDE Agent's Persistent Brain
 
 **Context Engineering for the Intelligence Age**
 
