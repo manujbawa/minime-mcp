@@ -10,11 +10,12 @@ services:
       - "${UI_PORT:-9000}:9000"
       - "${MCP_PORT:-8000}:8000"
       - "${POSTGRES_PORT:-5432}:5432"
-      - "${OLLAMA_PORT:-11434}:11434"
       - "${DEBUG_PORT:-9229}:9229"
 
     volumes:
-      - ${VOLUME_NAME:-minime-mcp-data}:/data
+      - data:/data
+      - wal:/data/postgres_wal
+      - docs:/app/data/documents
 
     env_file:
       - minime.env
@@ -26,6 +27,12 @@ services:
       retries: 3
       start_period: 60s
 
+# Volumes with dynamic naming using environment variables
+# Volume names use ${VOLUME_NAME} from minime.env (default: minime-mcp-v18)
 volumes:
-  minime-mcp-data:
-    external: false
+  data:
+    name: ${VOLUME_NAME:-minime-mcp-v18}-data
+  wal:
+    name: ${VOLUME_NAME:-minime-mcp-v18}-wal
+  docs:
+    name: ${VOLUME_NAME:-minime-mcp-v18}-docs
