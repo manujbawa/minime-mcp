@@ -640,4 +640,4 @@ minime-mcp init
 
 *Works with: Cursor • Claude Desktop • GitHub Copilot • Windsurf • VS Code • Any MCP-compatible tool*
 
-**Version 0.5.0** | Released October 2025 | [View Changelog]
+**Version 0.5.0** | Released October 2025 | [View Changelog]# minimemcp
