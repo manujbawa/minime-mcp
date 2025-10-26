@@ -71,10 +71,10 @@ This is optional - IDE integrations work without the CLI client.
 
 ### Optional: Configure Ports (Before Starting)
 
-If you need to change default ports (e.g., port 9000 is already in use), edit `.env` **before** running docker compose:
+If you need to change default ports (e.g., port 9000 is already in use), edit `minime.env` **before** running docker compose:
 
 ```bash
-# Edit install/.env and change port values:
+# Edit install/minime.env and change port values:
 HOST_UI_PORT=9001        # Web UI (default: 9000)
 HOST_MCP_PORT=8001       # MCP API (default: 8000)
 HOST_POSTGRES_PORT=5433  # PostgreSQL (default: 5432)
@@ -88,7 +88,7 @@ HOST_POSTGRES_PORT=5433  # PostgreSQL (default: 5432)
 
 ```bash
 cd install
-docker-compose up -d
+docker compose --env-file minime.env up -d
 ```
 
 **That's it!** Access MiniMe at:
@@ -98,7 +98,7 @@ docker-compose up -d
 
 ## Configuration
 
-The `.env` file contains all configuration options. Key settings:
+The `minime.env` file contains all configuration options. Key settings:
 
 ### Database (Required)
 ```bash
@@ -129,17 +129,17 @@ HOST_MCP_PORT=8000
 HOST_POSTGRES_PORT=5432
 ```
 
-See `.env` for all available options with detailed inline documentation.
+See `minime.env` for all available options with detailed inline documentation.
 
 ---
 
 ## Advanced Configuration
 
-All configuration is managed through `.env` (single source of truth). Common customizations:
+All configuration is managed through `minime.env` (single source of truth). Common customizations:
 
 ### Change LLM Model
 ```bash
-# Edit install/.env
+# Edit install/minime.env
 LLM_MODEL=llama3.2:3b           # Smaller, faster
 # or
 LLM_MODEL=gpt-oss:20b           # Larger, more accurate
@@ -147,14 +147,14 @@ LLM_MODEL=gpt-oss:20b           # Larger, more accurate
 
 ### Adjust Document Chunk Size
 ```bash
-# Edit install/.env
+# Edit install/minime.env
 CHUNK_SIZE_TOKENS=400           # Safe with 22% margin (recommended)
 CHUNK_SIZE_TOKENS=450           # Moderate margin
 ```
 
 ### Change Processing Settings
 ```bash
-# Edit install/.env
+# Edit install/minime.env
 BATCH_SIZE=20                   # Process more memories at once
 MAX_CONCURRENT=10               # More parallel operations
 QUEUE_WORKERS=3                 # More background workers
@@ -163,35 +163,18 @@ QUEUE_WORKERS=3                 # More background workers
 
 ### Disable Features
 ```bash
-# Edit install/.env
+# Edit install/minime.env
 ENABLE_PATTERN_MATCHING=false   # Skip pattern detection
 ENABLE_UNIFIED_INSIGHTS=false   # Disable insights processing
 REAL_TIME_PROCESSING=false      # Queue for batch processing
 ```
 
-**After editing `.env`, restart the container:**
+**After editing `minime.env`, restart the container:**
 ```bash
 cd install
-docker-compose down
-docker-compose up -d
+docker compose --env-file minime.env down
+docker compose --env-file minime.env up -d
 ```
-
-### Using a Custom Environment File Name
-
-If you renamed `.env` to a different filename (e.g., `production.env`, `myconfig.env`), you must specify it explicitly when running docker compose:
-
-```bash
-# Start with custom env file
-docker compose --env-file myconfig.env up -d
-
-# Stop with custom env file
-docker compose --env-file myconfig.env down
-
-# View logs with custom env file
-docker compose --env-file myconfig.env logs -f
-```
-
-**Important:** The `--env-file` flag must be used with EVERY docker compose command when using a custom filename. The `.env` filename is the only one Docker Compose loads automatically.
 
 ---
 
@@ -207,20 +190,20 @@ After MiniMe-MCP is running, configure your IDE:
 
 ```bash
 # View logs
-docker-compose logs -f
+docker compose --env-file minime.env logs -f
 
 # Stop
-docker-compose down
+docker compose --env-file minime.env down
 
 # Restart
-docker-compose restart
+docker compose --env-file minime.env restart
 
 # Update to latest version
-docker-compose pull
-docker-compose up -d
+docker compose --env-file minime.env pull
+docker compose --env-file minime.env up -d
 
 # Reset everything (⚠️ deletes all data!)
-docker-compose down -v
+docker compose --env-file minime.env down -v
 ```
 
 ## Troubleshooting
@@ -235,10 +218,10 @@ ollama list
 ```
 
 **Port Conflicts:**
-Edit `.env` and change the port values, then restart:
+Edit `minime.env` and change the port values, then restart:
 ```bash
-docker-compose down
-docker-compose up -d
+docker compose --env-file minime.env down
+docker compose --env-file minime.env up -d
 ```
 
 **View Container Status:**
