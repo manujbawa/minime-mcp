@@ -71,16 +71,16 @@ This is optional - IDE integrations work without the CLI client.
 
 ### Optional: Configure Ports (Before Starting)
 
-If you need to change default ports (e.g., port 9000 is already in use), edit `minime.env` **before** running docker compose:
+If you need to change default ports (e.g., port 9000 is already in use), edit `.env` **before** running docker compose:
 
 ```bash
-# Edit install/minime.env and change port values:
-UI_PORT=9001        # Web UI (default: 9000)
-MCP_PORT=8001       # MCP API (default: 8000)
-POSTGRES_PORT=5433  # PostgreSQL (default: 5432)
+# Edit install/.env and change port values:
+HOST_UI_PORT=9001        # Web UI (default: 9000)
+HOST_MCP_PORT=8001       # MCP API (default: 8000)
+HOST_POSTGRES_PORT=5433  # PostgreSQL (default: 5432)
 ```
 
-**How it works:** Docker maps `HOST_PORT:CONTAINER_PORT`, so `UI_PORT=9001` means:
+**How it works:** Docker maps `HOST_PORT:CONTAINER_PORT`, so `HOST_UI_PORT=9001` means:
 - Container runs on port 9000 internally
 - Accessible on your machine at `http://localhost:9001`
 
@@ -98,7 +98,7 @@ docker-compose up -d
 
 ## Configuration
 
-The `minime.env` file contains all configuration options. Key settings:
+The `.env` file contains all configuration options. Key settings:
 
 ### Database (Required)
 ```bash
@@ -124,22 +124,22 @@ LLM_MODEL=qwen2.5-coder:7b
 
 ### Ports
 ```bash
-UI_PORT=9000
-MCP_PORT=8000
-POSTGRES_PORT=5432
+HOST_UI_PORT=9000
+HOST_MCP_PORT=8000
+HOST_POSTGRES_PORT=5432
 ```
 
-See `minime.env` for all available options with detailed inline documentation.
+See `.env` for all available options with detailed inline documentation.
 
 ---
 
 ## Advanced Configuration
 
-All configuration is managed through `minime.env` (single source of truth). Common customizations:
+All configuration is managed through `.env` (single source of truth). Common customizations:
 
 ### Change LLM Model
 ```bash
-# Edit install/minime.env
+# Edit install/.env
 LLM_MODEL=llama3.2:3b           # Smaller, faster
 # or
 LLM_MODEL=gpt-oss:20b           # Larger, more accurate
@@ -147,14 +147,14 @@ LLM_MODEL=gpt-oss:20b           # Larger, more accurate
 
 ### Adjust Document Chunk Size
 ```bash
-# Edit install/minime.env
+# Edit install/.env
 CHUNK_SIZE_TOKENS=400           # Safe with 22% margin (recommended)
 CHUNK_SIZE_TOKENS=450           # Moderate margin
 ```
 
 ### Change Processing Settings
 ```bash
-# Edit install/minime.env
+# Edit install/.env
 BATCH_SIZE=20                   # Process more memories at once
 MAX_CONCURRENT=10               # More parallel operations
 QUEUE_WORKERS=3                 # More background workers
@@ -163,18 +163,35 @@ QUEUE_WORKERS=3                 # More background workers
 
 ### Disable Features
 ```bash
-# Edit install/minime.env
+# Edit install/.env
 ENABLE_PATTERN_MATCHING=false   # Skip pattern detection
 ENABLE_UNIFIED_INSIGHTS=false   # Disable insights processing
 REAL_TIME_PROCESSING=false      # Queue for batch processing
 ```
 
-**After editing `minime.env`, restart the container:**
+**After editing `.env`, restart the container:**
 ```bash
 cd install
 docker-compose down
 docker-compose up -d
 ```
+
+### Using a Custom Environment File Name
+
+If you renamed `.env` to a different filename (e.g., `production.env`, `myconfig.env`), you must specify it explicitly when running docker compose:
+
+```bash
+# Start with custom env file
+docker compose --env-file myconfig.env up -d
+
+# Stop with custom env file
+docker compose --env-file myconfig.env down
+
+# View logs with custom env file
+docker compose --env-file myconfig.env logs -f
+```
+
+**Important:** The `--env-file` flag must be used with EVERY docker compose command when using a custom filename. The `.env` filename is the only one Docker Compose loads automatically.
 
 ---
 
@@ -218,7 +235,7 @@ ollama list
 ```
 
 **Port Conflicts:**
-Edit `minime.env` and change the port values, then restart:
+Edit `.env` and change the port values, then restart:
 ```bash
 docker-compose down
 docker-compose up -d
