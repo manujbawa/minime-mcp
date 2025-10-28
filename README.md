@@ -1,50 +1,117 @@
-# 🧠 MiniMe-MCP v0.5.37: Your IDE Agent's Persistent Brain
 
-**Context Engineering for the Intelligence Age**
+![Document Upload and Processing](images/minime-splash.png)
 
-### **The Problem with Vibe Coding Today:**
+*MiniMe-MCP: Supercharge your AI Agents with your memories*
+
+*Your digital developer twin—Because "Explain Our Setup Again" Gets Old Fast*
+
+*v0.5.39: October 2025*
+
+---
+
+## The Problem: Your AI Has Amnesia
+
+Everyone's doing it now—**vibe coding** with AI assistants. That magical flow where you're thinking out loud, the AI gets it, and code just happens.
+
+**But here's the catch**: Your AI forgets everything. Every conversation starts from zero. Every project feels like explaining yourself to a stranger who forgot your last 47 conversations. Enter **Context-Engineering"
+
 - 🔄 **Endless repetition** — "Here's how we handle auth..." (for the 50th time)
-- 🤷 **Context amnesia** — AI forgets your patterns, preferences, and decisions
+- 🤷 **Context amnesia** — AI forgets your patterns, preferences, and hard-won decisions
 - 🏝️ **Project islands** — Learning from one project never benefits another
-- 📚 **Knowledge leakage** — Insights evaporate between sessions
-
-## Stop Explaining Yourself to Your AI
-
-Your IDE agent forgets everything. Cursor doesn't remember your patterns. Claude Desktop starts fresh. Copilot suggests code you already rejected.
-
-**Every session, you start from zero.**
+- 📚 **Knowledge leakage** — That brilliant debugging insight? Gone tomorrow.
 
 ---
 
-## What is MiniMe-MCP?
+## The Solution: Your AI's Digital Hippocampus
 
-A memory layer for your IDE agents. One system, works with **Cursor, Claude Desktop, GitHub Copilot, Windsurf, VS Code**—any tool that speaks MCP.
+**MiniMe-MCP** is the persistent memory layer your IDE agents desperately need.
 
-**Your agent learns once, remembers forever, applies everywhere.**
+Instead of this painful cycle:
+```
+You: "Hey AI, remember we use PostgreSQL with..."
+You: "Oh, and we prefer functional components..."
+You: "Also, we decided against Redis because..."
+```
+
+You get this:
+```
+You: "Build auth for the checkout flow"
+
+AI:  "Using your battle-tested pattern from payment-service-v2:
+      → JWT with refresh token rotation
+      → httpOnly cookies (per your security audit decision)
+      → Redis mutex to prevent race conditions (you debugged this for 6 hours)
+      → 15min access tokens, 7-day refresh tokens
+
+      Implementing now..."
+```
+
+**Your code. Your patterns. Your decisions. Remembered. Connected. Evolved.**
 
 ---
 
-## Installation: 
+## What You Get
 
-📖 **[Complete Installation Guide](install/README.md)** - Step-by-step setup for all supported IDEs
+✅ **One connected memory system, across IDEs, Desktop Agents, Projects**
+Works with Cursor, Claude Desktop/Code, VS Code, Windsurf, JetBrains, Zed—any tool that speaks MCP
+
+✅ **Cross-project intelligence**
+Lessons learned once → Applied everywhere automatically
+
+✅ **Document knowledge base**
+Upload PDFs, docs, specs → Your AI understands your system instantly
+
+✅ **Smart project linking**
+Connect v1 → v2 → v3, share patterns across related projects
+
+✅ **Zero-config memory**
+Auto-tags, auto-clusters, auto-learns from every interaction
+
+✅ **Privacy-first architecture**
+Runs locally, your data never leaves your machine
+
+---
+
+## Installation
+
+📖 **[Complete Installation Guide](install/README.md)** - Get running in under 2 minutes
+
+**TL;DR:**
+```bash
+# 1. Start MiniMe server
+cd install
+docker compose --env-file minime.env up -d
+
+# 2. Add to your IDE (see install guide for your specific IDE)
+# HTTP-capable: Cursor, VS Code, Claude Code, Windsurf, Roo Code, etc.
+# Command-based: Claude Desktop, Zed, JetBrains, etc. (requires npm client)
+
+# 3. Start coding with persistent memory!
+```
+
+**Supported IDEs**: Cursor • Claude Desktop • Claude Code • VS Code • Windsurf • Roo Code • Visual Studio 2022 • JetBrains • Zed • Cline • BoltAI • Augment Code • Warp • Amazon Q • and more...
+
+See [install/README.md](install/README.md) for detailed setup instructions for your IDE.
+
+---
 
 ## How It Works
 
-### **Search Your Memories**
+### 🔍 **Search Your Memories**
 ```
 You (in Cursor): "Search my memories about authentication patterns"
 
 Cursor: "Found 12 memories across 3 projects:
-         
+
          payment-service-v2 (2 months ago):
          → JWT with refresh token rotation
          → Redis mutex prevents race conditions
          → You debugged concurrent refresh calls for 6 hours
-         
+
          user-api-v1 (4 months ago):
          → Security audit: never use localStorage for tokens
          → Team decision: httpOnly cookies only
-         
+
          admin-dashboard (1 month ago):
          → 15min access tokens, 7-day refresh tokens
          → Auto-refresh 2 minutes before expiry"
@@ -56,76 +123,80 @@ Cursor: [Generates code using YOUR battle-tested patterns]
 
 ![Memory Search Interface](images/s1.jpg)
 
-*Works with Claude Code, Cursor and Claude Desktop and more..*
+---
 
-### **Get Cross-Project Insights**
+### 🧠 **Get Cross-Project Insights**
 ```
 You (in Claude Desktop): "Get insights on database patterns across my projects"
 
 Claude: "Analyzed 89 memories across 5 projects. Pattern detected:
-         
+
          You ALWAYS follow this progression:
          1. Start with PostgreSQL (projects: 5/5)
          2. Hit connection pool limits around 10K users (projects: 3/5)
          3. Add PgBouncer to solve it (projects: 3/3 that hit the issue)
-         
+
          Current project: user-service-v3
          Expected scale: 50K users
-         
+
          Recommendation: Include PgBouncer from day 1. You'll need it,
          and adding it later caused 2 hours of downtime in admin-api."
 ```
 
 ![Cross-Project Pattern Analysis](images/s2.jpg)
 
-*Works with Claude Code, Cursor and Claude Desktop and more..*
+---
 
-### **Search Your Documents**
+### 📚 **Search Your Documents**
 ```
 You (in Cursor): "Search my documents about webhook security"
 
 Cursor: "Found in 'API Security Guidelines v2.pdf' (uploaded last week):
-         
+
          Page 47: Webhook Signature Verification
          → MUST use HMAC-SHA256
          → Signature in X-Webhook-Signature header
          → Replay attack protection: 5-minute timestamp window
          → Rate limiting: 100 webhooks/minute per endpoint
-         
+
          Also found related memory from payment-service-v1:
          → You got burned by missing signature verification
          → Production incident: fake webhook drained test account
-         
+
          I'll implement webhooks with proper security from the start."
 ```
 
-### **Search Memories AND Documents Together**
+---
+
+### 🔗 **Search Memories AND Documents Together**
 ```
-You (in Claude Desktop): "Search my memories and documents about 
+You (in Claude Desktop): "Search my memories and documents about
                           error handling, include linked projects"
 
 Claude: "Searching across:
          - Current project: ecommerce-api
          - Linked projects: payment-service-v2, order-management
          - Uploaded documents: 3 PDFs, 12 markdown files
-         
+
          From documents:
          → 'Engineering Standards.pdf': Error codes must follow
            ERR-{DOMAIN}-{CODE} format (e.g., ERR-AUTH-001)
-         
+
          From payment-service-v2 memories:
          → You built a standardized error response wrapper
          → Includes: error code, message, trace_id, timestamp
          → Logs to Sentry with context
-         
+
          From order-management memories:
          → You added retry logic with exponential backoff
          → Max 3 retries, 2^n second delays
-         
+
          I can implement error handling using all these patterns."
 ```
 
-### **Store What Matters**
+---
+
+### 💾 **Store What Matters**
 ```
 You (in Cursor): "Store a memory: We decided against microservices.
                   Team is too small (3 devs). Maintenance overhead
@@ -136,27 +207,31 @@ Cursor: "✓ Stored as decision with high importance.
          I'll suggest monolith architecture in future projects."
 ```
 
-### **Link Projects, Learn Everywhere**
+---
+
+### 🔗 **Link Projects, Learn Everywhere**
 ```
 You: "Link payment-service-v1 to checkout-api as dependency"
 
 You: "Search my memories about Stripe webhooks, include linked projects"
 
 Cursor: "Found context from payment-service-v1:
-         
+
          Decision (6 months ago):
          → Stripe webhooks need idempotency keys
          → You discovered this after processing same payment twice
          → Solution: Store event IDs in Redis with 24hr TTL
-         
+
          Bug fix (3 months ago):
          → Race condition with concurrent webhook deliveries
          → Fixed with Redis distributed lock
-         
+
          Applying both lessons to checkout-api implementation..."
 ```
 
-### **Manage Tasks With Context**
+---
+
+### ✅ **Manage Tasks With Context**
 ```
 You: "Create task: Fix mobile login button not responding"
 
@@ -174,7 +249,7 @@ You: "Show my tasks"
 Cursor: "1 pending task:
          → Fix mobile login button not responding
          → Related: Auth debugging session, JWT refresh race condition
-         
+
          Should I expand the debugging session memory?"
 
 You: "Yes"
@@ -184,16 +259,18 @@ Cursor: "From debugging session:
          → Button disabled during API call
          → Race condition prevents re-enable
          → Solution discussed: Debounce + optimistic UI
-         
+
          Ready to implement the fix?"
 ```
 
-### **Upload Documents, Share Knowledge**
+---
+
+### 📄 **Upload Documents, Share Knowledge**
 ```
 You (in Claude Desktop): [Uploads "API Documentation v3.pdf" - 10MB]
 
 Claude: "Processing... Done in 28 seconds.
-         
+
          Created 868 chunks from 247 pages.
          I now understand:
          → OAuth 2.0 implementation (section 3)
@@ -201,7 +278,7 @@ Claude: "Processing... Done in 28 seconds.
          → Webhook signature verification (section 9)
          → Database sharding strategy (section 12)
          → Error code taxonomy (appendix B)
-         
+
          All stored with semantic search enabled."
 
 ---
@@ -213,24 +290,24 @@ You: "Build the OAuth refresh token endpoint"
 Cursor: [Generates code matching section 3 of your PDF exactly]
         "Implementation follows your API docs:
          → 15-minute access tokens
-         → 7-day refresh tokens  
+         → 7-day refresh tokens
          → Rotation on every refresh
          → httpOnly, Secure, SameSite=Strict cookies"
 ```
 
 ![Document Upload and Processing](images/s3.jpg)
 
-*Works with Claude Code, Cursor and Claude Desktop and more..*
+---
 
-### **Keep Memory Clean**
+### 🧹 **Keep Memory Clean**
 ```
 You: "Search Redis caching patterns"
 
 Claude: "Found 47 memories from user-service-v1.
-         
+
          But I also see newer memories showing you migrated
          to Memcached in user-service-v2 last month.
-         
+
          Should I inactivate the old Redis memories?"
 
 You: "Yes, inactivate them. Reason: migrated to Memcached"
@@ -238,21 +315,28 @@ You: "Yes, inactivate them. Reason: migrated to Memcached"
 Claude: "✓ Inactivated 47 Redis memories (soft delete, recoverable)
          ✓ Audit trail preserved
          ✓ I'll suggest Memcached patterns by default now
-         
+
          Your context stays current as your stack evolves."
 ```
 
 ![Memory Lifecycle Management](images/s4.jpg)
 
-*Works with Claude Code, Cursor and Claude Desktop and more..*
-
 ---
 
-## 🚀 What's New in v0.5.36
+## 🚀 What's New in v0.5.39
 
-![MiniMe-MCP v0.5.36 Dashboard](images/s5.jpg)
+![MiniMe-MCP v0.5.39 Dashboard](images/s5.jpg)
 
-*Works with Claude Code, Cursor and Claude Desktop and more..*
+### 🌐 **HTTP Transport with Streamable SSE**
+Direct HTTP connections for modern IDEs—no npm client needed for most tools.
+
+**What changed:**
+- Native HTTP/SSE transport for real-time streaming
+- Cursor, VS Code, Claude Code, Windsurf work out of the box
+- Optional npm client for command-only IDEs (Claude Desktop, Zed, JetBrains)
+- Single unified MCP endpoint: `http://localhost:8000/mcp`
+
+---
 
 ### 📚 **Document Upload & RAG System**
 Turn any PDF, DOCX, or code file into searchable agent knowledge.
@@ -264,14 +348,6 @@ Turn any PDF, DOCX, or code file into searchable agent knowledge.
 - Hybrid search: Vector similarity + keyword + tag matching
 - Zero API costs: YAKE keyword extraction (9s for 868 chunks)
 - Upload once: Every IDE agent gets instant access
-
-**The workflow:**
-```
-1. Upload docs in Claude Desktop
-2. MiniMe processes, chunks, embeds, tags
-3. Cursor gets the same knowledge instantly
-4. Your whole team codes against one knowledge base
-```
 
 **Real impact:**
 - Architecture docs → Agent understands your system design
@@ -309,17 +385,6 @@ auth-library-v2 (dependency)
 One lesson learned → Applied to 4 projects automatically
 ```
 
-**Example use case:**
-```
-You: "Link payment-service-v1 as parent to payment-service-v2"
-You: "Search webhook patterns, include linked projects"
-
-Agent finds:
-→ Production incident from v1 (duplicate webhook processing)
-→ Solution that worked in v1 (Redis deduplication)
-→ Automatically applies lesson to v2 implementation
-```
-
 ---
 
 ### 🔄 **Memory Lifecycle Management**
@@ -336,19 +401,6 @@ Your patterns evolve. Your memory should too.
 - Prevents knowledge drift as your stack evolves
 - Keeps context clean and relevant
 
-**Example workflow:**
-```
-6 months ago: "We decided against Kubernetes (too complex for 3-dev team)"
-Today: Team grew to 15 devs, complexity is manageable
-
-You: "Update memory #847: We're adopting Kubernetes now.
-      Team size makes the complexity worth it."
-
-Agent: "✓ Updated. Reason: Team growth (3 → 15 devs)
-       ✓ Original decision preserved in audit trail
-       ✓ I'll suggest Kubernetes for new projects now"
-```
-
 ---
 
 ### 🌐 **Global Rules System**
@@ -359,48 +411,19 @@ Set guardrails once. Every IDE agent follows them forever.
 - Rules auto-load during MCP handshake (before first user message)
 - Apply to ALL projects, ALL agents, ALL time
 
-**Priority levels:**
-- 🔴 **Critical (≥0.8)** - Safety guardrails, must follow
-- 🟡 **Important (≥0.6)** - Best practices, strong suggestions
-- 🟢 **Normal (<0.6)** - Preferences, nice-to-haves
+**4 default rules included:**
 
-**4 default rules included in v0.5.0:**
+1. 🔴 **Always Confirm Destructive Operations**
+   Ask before deleting files, dropping tables, force-pushing git
 
-1. 🔴 **Always Confirm Destructive Operations**  
-   Ask before deleting files, dropping tables, force-pushing git, etc.
+2. 🔴 **Never Implement Fallbacks Without Asking**
+   Report failures, don't substitute silently
 
-2. 🔴 **Never Implement Fallbacks Without Asking**  
-   If user requests specific tool/approach, report failures, don't substitute silently
+3. 🔴 **Proactively Search Memories Before Implementing**
+   Auto-search for relevant context, past patterns, known issues
 
-3. 🔴 **Proactively Search Memories Before Implementing** (NEW!)  
-   When implementing features, auto-search for relevant context, past patterns, known issues
-
-4. 🟡 **Load Rules on Initialization**  
-   Call get_rules on startup to ensure consistent behavior
-
-**Example:**
-```
-You (in Claude Desktop): "Store global rule: Always use TypeScript
-                          strict mode. No exceptions."
-
----
-
-Next week in Cursor:
-
-Cursor: [Auto-generates TypeScript with strict: true]
-        "Following global rule: TypeScript strict mode enabled."
-
----
-
-Next month in Copilot:
-
-Copilot: [Suggests JavaScript]
-
-You: "Hey, we use TypeScript"
-
-Copilot: "You're right! Global rule requires TypeScript strict mode.
-          Switching to TypeScript with strict: true..."
-```
+4. 🟡 **Load Rules on Initialization**
+   Ensure consistent behavior across all sessions
 
 ---
 
@@ -414,31 +437,6 @@ Know your knowledge costs. Optimize your memory footprint.
 - Growth trends over time
 - Token-efficient vs token-heavy projects
 
-**Example view:**
-```
-📊 Total Tokens: 2.4M
-├─ Memories: 1.8M (75%)
-├─ Document chunks: 500K (21%)
-└─ Tags/metadata: 100K (4%)
-
-🏆 Top Projects:
-1. ecommerce-api: 890K tokens
-   → 580 memories, 120 document chunks
-   → Largest: Design decisions (250K tokens)
-
-2. payment-service: 620K tokens
-   → 340 memories, 85 document chunks
-   → Largest: API documentation (180K tokens)
-
-📈 Trend: +15K tokens/week (healthy growth)
-
-💡 Memory Type Distribution:
-├─ Decisions: 35% (critical architectural context)
-├─ Code snippets: 25% (reusable patterns)
-├─ Design docs: 20% (system understanding)
-└─ Working notes: 15% (session context)
-```
-
 **Why it matters:**
 - Future-ready for OpenAI-compatible pricing
 - Identify bloated projects needing cleanup
@@ -450,41 +448,41 @@ Know your knowledge costs. Optimize your memory footprint.
 ## 🎨 Complete Feature Set
 
 ### **Memory Operations**
-✅ **store_memory** - Save decisions, patterns, learnings, bugs  
-✅ **search_memories** - Semantic + keyword + tag hybrid search  
-✅ **expand_memories** - Progressive disclosure (search IDs → full content)  
-✅ **manage_memory** - Update, inactivate, reactivate (NEW in v0.5.0)
+✅ **store_memory** - Save decisions, patterns, learnings, bugs
+✅ **search_memories** - Semantic + keyword + tag hybrid search
+✅ **expand_memories** - Progressive disclosure (search IDs → full content)
+✅ **modify_memory** - Update, inactivate, reactivate with audit trail
 
 ### **Intelligence & Analysis**
-✅ **get_insights** - Cross-project patterns, quality analysis, technical debt  
-✅ **start_thinking / add_thought** - Structured reasoning sequences  
-✅ **get_rules** - Load global and project-specific guardrails (NEW in v0.5.0)
+✅ **get_insights** - Cross-project patterns, quality analysis, technical debt
+✅ **start_thinking / add_thought** - Structured reasoning sequences
+✅ **get_rules** - Load global and project-specific guardrails
 
-### **Document Management** (NEW in v0.5.0)
-✅ **Upload documents** - PDF, DOCX, Markdown, CSV, Excel, code files  
-✅ **Search documents** - Hybrid vector + keyword + tag search  
-✅ **Expand chunks** - Get surrounding context (±1 or ±2 chunks)  
+### **Document Management**
+✅ **Upload documents** - PDF, DOCX, Markdown, CSV, Excel, code files
+✅ **Search documents** - Hybrid vector + keyword + tag search
+✅ **Expand chunks** - Get surrounding context (±1 or ±2 chunks)
 ✅ **Smart chunking** - 1000 tokens with 128-token overlap
 
 ### **Project Organization**
-✅ **manage_project** - Briefs, PRDs, implementation plans, linking  
-✅ **Link projects** - Dependencies, forks, parent/child, templates (NEW in v0.5.0)  
-✅ **manage_tasks** - Create, complete, list with linked memories  
-✅ **Token analytics** - Usage tracking per project (NEW in v0.5.0)
+✅ **manage_project** - Briefs, PRDs, implementation plans
+✅ **Link projects** - Dependencies, forks, parent/child, templates
+✅ **manage_tasks** - Create, complete, list with linked memories
+✅ **Token analytics** - Usage tracking per project
 
 ### **Search Capabilities**
-✅ **9 memory types** - decision, rule, code-snippet, design, learning, research, progress, task, debug  
-✅ **3 search modes** - semantic (concepts), keyword (exact), hybrid (both)  
-✅ **File path filtering** - Find memories by code file patterns  
-✅ **Linked project search** - Discover context across relationships (NEW)  
-✅ **Search target** - memories only, documents only, or both (NEW)  
+✅ **9 memory types** - decision, rule, code-snippet, design, learning, research, progress, task, debug
+✅ **3 search modes** - semantic (concepts), keyword (exact), hybrid (both)
+✅ **File path filtering** - Find memories by code file patterns
+✅ **Linked project search** - Discover context across relationships
+✅ **Search target** - memories only, documents only, or both
 ✅ **Recent filtering** - Last 30 days only
 
 ---
 
 ## ⚡ Technical Highlights
 
-### **Performance Upgrades**
+### **Performance**
 - **4x larger chunks**: 1000 tokens vs 250 (more context per chunk)
 - **95% clean splits**: <5% mid-sentence breaks (was ~30% in v0.2.5)
 - **Lightning tags**: 9 seconds vs 15-43 minutes (YAKE-only approach)
@@ -495,37 +493,38 @@ Know your knowledge costs. Optimize your memory footprint.
 - **Three-table RAG**: documents (metadata) → chunks (content) → memories (notes)
 - **Event-driven jobs**: Async, non-blocking background processing
 - **Graph traversal**: PostgreSQL recursive CTEs for project relationships
-- **Tag service**: Python FastAPI for YAKE keyword extraction
+- **HTTP/SSE transport**: Real-time streaming with Server-Sent Events
 - **Enterprise foundation**: Row-Level Security policies (multi-tenancy ready)
 
 ### **Database Enhancements**
-- New `document_chunks` table with pgvector embeddings
-- New `project_links` table for many-to-many relationships
-- New `memory_audit_log` for complete change history
+- `document_chunks` table with pgvector embeddings
+- `project_links` table for many-to-many relationships
+- `memory_audit_log` for complete change history
 - GIN index on tags for instant tag searches
 - JSONB `token_metadata` for analytics
 - Lifecycle columns: `is_active`, `inactivated_at`, `inactivation_reason`
 
 ---
 
-## 🛠️ 10 MCP Tools (Was 8 in v0.2.5)
+## 🛠️ 10 MCP Tools
 
 1. **store_memory** - Save decisions, patterns, learnings
 2. **search_memories** - Semantic/keyword/hybrid search across memories & docs
 3. **expand_memories** - Get full content + surrounding context
-4. **get_insights** - Meta-analysis: patterns, quality, technical debt
-5. **start_thinking** / **add_thought** - Structured reasoning sequences
-6. **manage_tasks** - Create, complete, list tasks with context
-7. **manage_memory** - Update, inactivate, reactivate memories (NEW)
-8. **get_rules** - Load global and project-specific rules (NEW)
-9. **manage_project** - Briefs, PRDs, plans, project linking (ENHANCED)
+4. **modify_memory** - Update, inactivate, reactivate memories
+5. **get_insights** - Meta-analysis: patterns, quality, technical debt
+6. **start_thinking** / **add_thought** - Structured reasoning sequences
+7. **manage_tasks** - Create, complete, list tasks with context
+8. **get_rules** - Load global and project-specific rules
+9. **manage_project** - Briefs, PRDs, plans, project linking
+10. **help** - Interactive guidance for tool selection and workflows
 
 ---
 
 ## 💡 Pro Tips
 
 ### **Make Your Agent Proactive**
-The new **Proactive Context Retrieval** global rule makes your agent automatically search memories before implementing. It's enabled by default, but you can customize it:
+The **Proactive Context Retrieval** global rule makes your agent automatically search memories before implementing. Customize it:
 
 ```
 "Store a global rule: When implementing auth, payments, or database
@@ -571,46 +570,6 @@ Efficient workflow:
 
 ---
 
-## 🐛 Bug Fixes & Improvements
-
-- Fixed project link creation type errors
-- Corrected SQL functions for relationship detection
-- Improved tool descriptions to prevent confusion
-- Fixed chunking to respect token boundaries
-- Resolved mega-cluster issues in Louvain algorithm
-- Fixed PostgreSQL index syntax errors
-- Resolved MUI Grid component compatibility issues
-- Fixed memory type validation and mapping
-- Improved error handling in background jobs
-- Better retry logic with exponential backoff
-
----
-
-## 📝 Configuration Changes
-
-**New Environment Variables:**
-```bash
-# Document Processing
-CHUNK_SIZE_TOKENS=1000              # Default: 1000
-CHUNK_OVERLAP_TOKENS=128            # Default: 128
-MAX_FILE_SIZE_MB=50                 # Default: 50
-
-# Tag Service
-TAG_SERVICE_URL=http://localhost:8001  # Python FastAPI service
-TAG_SERVICE_TIMEOUT=30              # Seconds
-
-# Performance
-EMBEDDING_CONCURRENT_THREAD_POOL=1  # Default: 1
-```
-
-**Deprecated:**
-- `ai_insights_enabled` - Replaced by Unified Insights V2
-
-**New Defaults:**
-- `auto_tagging_enabled` defaults to `false` (requires Python tag service)
-
----
-
 ## 🚢 Ready to Ship Intelligence
 
 Stop explaining yourself to your IDE agent.
@@ -619,25 +578,40 @@ Stop explaining yourself to your IDE agent.
 - ❌ "Let me explain our setup again..."
 - ✅ "You know what we're building. Let's go."
 
-Your code. Your patterns. Your decisions.  
+Your code. Your patterns. Your decisions.
 **Remembered. Connected. Evolved.**
 
 ---
 
-## 📥 Installation
+**Supported IDEs**: Cursor • Claude Desktop • Claude Code • VS Code • Windsurf • Roo Code • Visual Studio 2022 • JetBrains • Zed • Cline • BoltAI • Augment Code • Warp • Amazon Q • and more...
 
-```bash
-# Install MiniMe-MCP
-npm install -g minime-mcp
+**Version 0.5.39** | Released January 2025 | [Installation Guide](install/README.md)
 
-# Initialize with your IDE agent
-minime-mcp init
+---
 
-# Configure in Claude Desktop, Cursor, or VS Code
-# See full installation guide: [link]
-```
+## 📖 Documentation
 
+- **[Installation Guide](install/README.md)** - Complete setup for all IDEs
+- **[GitHub Repository](https://github.com/yourusername/minime-mcp)** - Source code and issues
+- **[Docker Hub](https://hub.docker.com/r/manujbawa/minimemcp)** - Official Docker images
 
-*Works with: Cursor • Claude Desktop • GitHub Copilot • Windsurf • VS Code • Any MCP-compatible tool*
+---
 
-**Version 0.5.0** | Released October 2025 | [View Changelog]# minimemcp
+## 🤝 Contributing
+
+MiniMe-MCP is open source. Contributions welcome!
+
+- Report bugs via GitHub Issues
+- Submit feature requests
+- Contribute code via Pull Requests
+- Share your use cases and patterns
+
+---
+
+## 📄 License
+
+MIT License - See LICENSE file for details
+
+---
+
+**Built with 💙 by developers who are tired of explaining themselves to their AI assistants**
