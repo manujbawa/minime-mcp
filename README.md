@@ -1,4 +1,4 @@
-# 🧠 MiniMe-MCP v0.5.4: Your IDE Agent's Persistent Brain
+# 🧠 MiniMe-MCP v0.5.37: Your IDE Agent's Persistent Brain
 
 **Context Engineering for the Intelligence Age**
 
@@ -26,7 +26,7 @@ A memory layer for your IDE agents. One system, works with **Cursor, Claude Desk
 
 ## Installation: 
 
-📖 **[Complete Installation Guide](install/INSTALL.md)** - Step-by-step setup for all supported IDEs
+📖 **[Complete Installation Guide](install/README.md)** - Step-by-step setup for all supported IDEs
 
 ## How It Works
 
@@ -248,9 +248,9 @@ Claude: "✓ Inactivated 47 Redis memories (soft delete, recoverable)
 
 ---
 
-## 🚀 What's New in v0.5.4
+## 🚀 What's New in v0.5.36
 
-![MiniMe-MCP v0.5.4 Dashboard](images/s5.jpg)
+![MiniMe-MCP v0.5.36 Dashboard](images/s5.jpg)
 
 *Works with Claude Code, Cursor and Claude Desktop and more..*
 

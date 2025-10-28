@@ -92,7 +92,7 @@ Update the `MINIME_SERVER_URL` in your IDE's config to match your custom port (e
 
 ```bash
 cd install
-docker-compose up -d
+docker compose --env-file minime.env up -d
 ```
 
 **That's it!** Access MiniMe at:
@@ -193,8 +193,8 @@ REAL_TIME_PROCESSING=false      # Queue for batch processing
 **After editing `minime.env`, restart the container:**
 ```bash
 cd install
-docker-compose down
-docker-compose up -d
+docker compose down
+docker compose --env-file minime.env up -d
 ```
 
 ---
@@ -624,20 +624,20 @@ Add this to your Amazon Q Developer CLI configuration file. See [Amazon Q Develo
 
 ```bash
 # View logs
-docker-compose logs -f
+docker compose --env-file minime.env logs -f
 
 # Stop
-docker-compose down
+docker compose down
 
 # Restart
-docker-compose restart
+docker compose --env-file minime.env restart
 
 # Update to latest version
-docker-compose pull
-docker-compose up -d
+docker compose --env-file minime.env pull
+docker compose --env-file minime.env up -d
 
 # Reset everything (⚠️ deletes all data!)
-docker-compose down -v
+docker compose down -v
 ```
 
 ## 🛟 Tips
@@ -714,8 +714,8 @@ OLLAMA_HOST=http://your-ollama-host:11434
 Edit `minime.env` and change the HOST_* port mappings, then restart:
 ```bash
 # Edit install/minime.env - change HOST_UI_PORT, HOST_MCP_PORT, etc.
-docker-compose down
-docker-compose up -d
+docker compose down
+docker compose --env-file minime.env up -d
 ```
 
 **Remember:** If you change `HOST_MCP_PORT`, you must also update your IDE config to use the new port.
@@ -799,6 +799,33 @@ curl http://localhost:8000/health
 
 # Check MCP status with tool list
 curl http://localhost:8000/mcp/status
+```
+
+</details>
+
+<details>
+<summary><b>Docker Image Issues / Not Getting Latest Version</b></summary>
+
+If you're experiencing issues with the Docker image or not getting the latest version from Docker Hub:
+
+**Force pull latest image and restart:**
+```bash
+cd install
+docker compose down
+docker compose --env-file minime.env up --pull always
+```
+
+The `--pull always` flag forces Docker to pull the latest image from Docker Hub, ignoring any cached local images. This is useful when:
+- You're not seeing the latest features or fixes
+- The image seems corrupted or outdated
+- You want to ensure you have the absolute latest version
+
+**Alternative approach:**
+```bash
+# Remove old image completely and start fresh
+docker compose down
+docker rmi manujbawa/minimemcp:latest
+docker compose --env-file minime.env up -d
 ```
 
 </details>
