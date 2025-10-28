@@ -13,7 +13,7 @@ import {
 import fetch from 'node-fetch';
 
 // Server configuration
-const MINIME_SERVER_URL = process.env.MINIME_SERVER_URL || 'http://localhost:8000';
+const MINIME_SERVER_URL = process.env.MINIME_SERVER_URL || 'http://localhost:8000/mcp';
 const DEBUG = process.env.MINIME_DEBUG === 'true';
 
 // Logging helper
@@ -51,10 +51,11 @@ async function callMiniMeServer(method, params = {}) {
   log(`Calling MiniMe server: ${method}`, params);
 
   try {
-    const response = await fetch(`${MINIME_SERVER_URL}/mcp`, {
+    const response = await fetch(MINIME_SERVER_URL, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
+        'Accept': 'application/json, text/event-stream',
         'User-Agent': 'MiniMe-MCP-Client/1.0'
       },
       body: JSON.stringify(requestBody)
@@ -136,15 +137,18 @@ async function start() {
   
   // Test connection to MiniMe server
   try {
-    const response = await fetch(`${MINIME_SERVER_URL}/health`);
+    // Extract base URL (remove /mcp if present)
+    const baseUrl = MINIME_SERVER_URL.replace(/\/mcp$/, '');
+    const response = await fetch(`${baseUrl}/health`);
     if (!response.ok) {
-      console.error(`Warning: MiniMe server at ${MINIME_SERVER_URL} is not responding`);
+      console.error(`Warning: MiniMe server at ${baseUrl} is not responding`);
       console.error(`Make sure your Docker container is running: docker run -p 8000:8000 minime-mcp`);
     } else {
       log('Successfully connected to MiniMe server');
     }
   } catch (error) {
-    console.error(`Warning: Cannot connect to MiniMe server at ${MINIME_SERVER_URL}`);
+    const baseUrl = MINIME_SERVER_URL.replace(/\/mcp$/, '');
+    console.error(`Warning: Cannot connect to MiniMe server at ${baseUrl}`);
     console.error(`Error: ${error.message}`);
     console.error(`Make sure your Docker container is running: docker run -p 8000:8000 minime-mcp`);
   }
