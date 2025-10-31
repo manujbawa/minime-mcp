@@ -597,16 +597,13 @@ Your code. Your patterns. Your decisions.
 
 ---
 
-[![MseeP.ai Security Assessment Badge](https://mseep.net/pr/manujbawa-minime-mcp-badge.png)](https://mseep.ai/app/manujbawa-minime-mcp)
 
-
-## 🤝 Contributing
+## 🤝 Reporting Issues
 
 MiniMe-MCP is open source. Contributions welcome!
 
 - Report bugs via GitHub Issues
 - Submit feature requests
-- Contribute code via Pull Requests
 - Share your use cases and patterns
 
 ---
@@ -618,5 +615,3 @@ MIT License - See LICENSE file for details
 ---
 
 **Built with 💙 by developers who are tired of explaining themselves to their AI assistants**
-
-[![Verified on MseeP](https://mseep.ai/badge.svg)](https://mseep.ai/app/0e8372e8-9052-48fd-a397-ef99c44eafd9)
