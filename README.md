@@ -1,5 +1,3 @@
-[![MseeP.ai Security Assessment Badge](https://mseep.net/pr/manujbawa-minime-mcp-badge.png)](https://mseep.ai/app/manujbawa-minime-mcp)
-
 
 ![Document Upload and Processing](images/minime-splash.png)
 
@@ -599,6 +597,9 @@ Your code. Your patterns. Your decisions.
 
 ---
 
+[![MseeP.ai Security Assessment Badge](https://mseep.net/pr/manujbawa-minime-mcp-badge.png)](https://mseep.ai/app/manujbawa-minime-mcp)
+
+
 ## 🤝 Contributing
 
 MiniMe-MCP is open source. Contributions welcome!
@@ -617,3 +618,5 @@ MIT License - See LICENSE file for details
 ---
 
 **Built with 💙 by developers who are tired of explaining themselves to their AI assistants**
+
+[![Verified on MseeP](https://mseep.ai/badge.svg)](https://mseep.ai/app/0e8372e8-9052-48fd-a397-ef99c44eafd9)
