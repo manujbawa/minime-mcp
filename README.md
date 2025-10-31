@@ -1,3 +1,5 @@
+[![MseeP.ai Security Assessment Badge](https://mseep.net/pr/manujbawa-minime-mcp-badge.png)](https://mseep.ai/app/manujbawa-minime-mcp)
+
 
 ![Document Upload and Processing](images/minime-splash.png)
 
