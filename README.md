@@ -5,7 +5,7 @@
 
 *Your digital developer twin—Because "Explain Our Setup Again" Gets Old Fast*
 
-*v0.5.39: October 2025*
+*v0.5.66: October 2025*
 
 ---
 
@@ -323,9 +323,9 @@ Claude: "✓ Inactivated 47 Redis memories (soft delete, recoverable)
 
 ---
 
-## 🚀 What's New in v0.5.39
+## 🚀 What's New in v0.5.66
 
-![MiniMe-MCP v0.5.39 Dashboard](images/s5.jpg)
+![MiniMe-MCP v0.5.66 Dashboard](images/s5.jpg)
 
 ### 🌐 **HTTP Transport with Streamable SSE**
 Direct HTTP connections for modern IDEs—no npm client needed for most tools.
