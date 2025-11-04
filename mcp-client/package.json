@@ -3,7 +3,7 @@
   "version": "1.2.3",
   "description": "MCP client for connecting Cursor/VS Code to MiniMe AI Memory Server",
   "author": "MiniMe Team",
-  "license": "MIT",
+  "license": "SEE LICENSE IN LICENSE",
   "type": "module",
   "bin": {
     "minime-mcp": "./bin/minime-mcp"

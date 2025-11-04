@@ -600,7 +600,7 @@ Your code. Your patterns. Your decisions.
 
 ## 🤝 Reporting Issues
 
-MiniMe-MCP is open source. Contributions welcome!
+MiniMe-MCP Community Version. Contributions welcome!
 
 - Report bugs via GitHub Issues
 - Submit feature requests
@@ -610,7 +610,7 @@ MiniMe-MCP is open source. Contributions welcome!
 
 ## 📄 License
 
-MIT License - See LICENSE file for details
+Community Version - See LICENSE file for details
 
 ---
 
